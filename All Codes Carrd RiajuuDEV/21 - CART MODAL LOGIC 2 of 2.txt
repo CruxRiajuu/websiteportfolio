@@ -1,0 +1,220 @@
+<script>
+(function () {
+'use strict';
+
+const STRIPE_KEY = 'pk_live_51OHfwcIaRpVk2G5N78UiDGdQLFzmUh1dv6bbA0D4N4I5bK2n7mPruCL8YpY10RuhIImCOJka8aikchX9RAi017k100KJUWJMK7';
+const JSON_URL = 'https://raw.githubusercontent.com/CruxRiajuu/carrd-store-data/main/digital_products.json';
+
+const allCarts = document.querySelectorAll('#cruxcart');
+if(allCarts.length > 1) allCarts[0].remove();
+
+let cart = [], products = [], checkoutOpen = false;
+let stripe;
+try { stripe = Stripe(STRIPE_KEY); } catch(e) { console.error("Stripe Error", e); }
+
+const getEl = (id) => document.getElementById(id);
+
+// --- VIEW SWITCHING ---
+const toggleCheckoutView = (isCheckout) => {
+const itemsBody = getEl('main-cart-body');
+const payBody = getEl('cruxpay');
+const total = getEl('main-total-row');
+const btn = getEl('cruxcheckout');
+const clear = getEl('cruxclear');
+
+if(isCheckout) {
+// Hide Items & Total
+if(itemsBody) itemsBody.style.display = 'none';
+if(total) total.style.display = 'none';
+if(clear) clear.style.display = 'none';
+
+// FORCE HIDE CHECKOUT BUTTON
+if(btn) btn.style.setProperty('display', 'none', 'important');
+
+// Show Payment
+if(payBody) {
+payBody.style.display = 'flex';
+payBody.style.opacity = '0';
+setTimeout(() => { payBody.style.opacity = '1'; }, 50);
+}
+} else {
+// Restore Items & Total
+if(payBody) payBody.style.display = 'none';
+
+if(itemsBody) {
+itemsBody.style.display = 'block';
+itemsBody.style.opacity = '0';
+setTimeout(() => { itemsBody.style.opacity = '1'; }, 50);
+}
+if(total) total.style.display = 'flex';
+if(clear) clear.style.display = 'block';
+if(btn) btn.style.setProperty('display', 'block', 'important');
+}
+checkoutOpen = isCheckout;
+};
+
+// --- CORE FUNCTIONS ---
+window.openCartModal = function() {
+const modal = getEl('cruxcart');
+if(modal) { modal.style.display = 'flex'; render(); }
+};
+
+window.closeCruxCart = function() {
+const modal = getEl('cruxcart');
+if(modal) {
+modal.style.display = 'none';
+toggleCheckoutView(false);
+}
+};
+
+window.addToCart = async function(id) {
+if(!products || products.length === 0) {
+toastMsg("Initializing store...");
+try {
+const res = await fetch(JSON_URL);
+products = await res.json();
+} catch(e) {
+return toastMsg("Error loading products.");
+}
+}
+const p = products.find(x => x.id === id);
+if(!p) return toastMsg('Item not found');
+const ex = cart.find(x => x.id === id);
+if(ex) { ex.qty++; } else { cart.push({...p, qty:1}); }
+save(); render(); toastMsg(`<strong>${p.name}</strong><br>added to cart`);
+};
+
+window.changeQty = function(id, delta) {
+const item = cart.find(x => x.id === id);
+if(!item) return;
+item.qty += delta;
+if(item.qty <= 0) cart = cart.filter(x => x.id !== id);
+save(); render();
+};
+
+window.closeConfirm = function() { getEl('crux-confirm-overlay').style.display = 'none'; }
+window.confirmClear = function() { cart = []; save(); render(); getEl('crux-confirm-overlay').style.display = 'none'; }
+
+const toastMsg = (msg) => {
+const box = getEl('cruxtoast');
+if(!box) return;
+const t = document.createElement('div');
+t.className = 'crux-toast-msg';
+t.innerHTML = msg;
+box.appendChild(t);
+setTimeout(()=>{ t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 3000);
+};
+
+const save = () => localStorage.setItem('crux2025', JSON.stringify(cart));
+const load = () => { cart = JSON.parse(localStorage.getItem('crux2025')||'[]'); render(); };
+
+const render = () => {
+const itemsEl = getEl('cruxitems');
+const totalEl = getEl('cruxtotal');
+const emptyEl = getEl('cruxempty');
+const clearBtn = getEl('cruxclear');
+const checkBtn = getEl('cruxcheckout');
+
+if(!itemsEl) return;
+
+itemsEl.innerHTML = '';
+const sumCents = cart.reduce((s,i) => s + i.price * i.qty, 0);
+totalEl.textContent = '$' + (sumCents/100).toFixed(2);
+
+if(cart.length === 0) {
+emptyEl.style.display = 'block';
+if(checkBtn) checkBtn.style.display = 'none';
+if(clearBtn) clearBtn.style.display = 'none';
+} else {
+emptyEl.style.display = 'none';
+if(!checkoutOpen) {
+if(clearBtn) clearBtn.style.display = 'block';
+if(checkBtn) checkBtn.style.display = 'block';
+}
+
+cart.forEach(i => {
+itemsEl.innerHTML += `
+<div class="crux-item">
+<div class="crux-item-info">
+<strong>${i.name}</strong>
+<span>$${(i.price/100).toFixed(2)}</span>
+</div>
+<div class="qty-group">
+<button class="qty-btn" onclick="changeQty(${i.id},-1)">-</button>
+<span style="color:#fff;font-size:0.9rem;min-width:20px;text-align:center;">${i.qty}</span>
+<button class="qty-btn" onclick="changeQty(${i.id},1)">+</button>
+<button class="qty-btn qty-del" onclick="changeQty(${i.id},-999)">×</button>
+</div>
+</div>`;
+});
+}
+};
+
+fetch(JSON_URL).then(r=>r.json()).then(p=>{ products=p; load(); }).catch(e=>console.log("JSON Load Error", e));
+
+const clearBtn = getEl('cruxclear');
+if(clearBtn) clearBtn.onclick = () => { getEl('crux-confirm-overlay').style.display = 'flex'; };
+
+const backBtn = getEl('cruxback');
+if(backBtn) backBtn.onclick = () => { toggleCheckoutView(false); };
+
+const checkoutBtn = getEl('cruxcheckout');
+if(checkoutBtn) checkoutBtn.onclick = () => {
+if(cart.length === 0) return;
+toggleCheckoutView(true);
+
+const ppDiv = getEl('paypalgo');
+if(!ppDiv.innerHTML) {
+try {
+paypal.Buttons({
+fundingSource: paypal.FUNDING.PAYPAL,
+style: {
+layout:'vertical',
+color:'black',
+shape:'rect',
+label:'paypal',
+height: 36
+},
+createOrder:(d,a)=>{
+let calcTotal = 0;
+const ppItems = cart.map(item => {
+let cat = item.category ? item.category.replace(/-/g, ' ').toUpperCase() : "ITEM";
+let name = `[${cat}] ${item.name}`;
+if(name.length > 127) name = name.substring(0, 124) + "...";
+const price = (item.price/100).toFixed(2);
+calcTotal += parseFloat(price) * item.qty;
+return { name: name, description: cat, quantity: String(item.qty), unit_amount: { currency_code: "USD", value: price }, category: "DIGITAL_GOODS" };
+});
+const totalStr = calcTotal.toFixed(2);
+return a.order.create({purchase_units:[{amount:{currency_code:"USD",value:totalStr,breakdown:{item_total:{currency_code:"USD",value:totalStr}}},items:ppItems}]});
+},
+onApprove:(d,a)=>{
+return a.order.capture().then(details => {
+const bName = details.payer.name.given_name;
+const bEmail = details.payer.email_address;
+alert('Payment Successful!\n\nBuyer: ' + bName + '\nEmail: ' + bEmail + '\n\nWe will contact you shortly.');
+cart=[]; save(); render(); window.closeCruxCart();
+});
+},
+onError: err => { console.error(err); alert("PayPal Error"); }
+}).render('#paypalgo');
+} catch(e) { console.error("PayPal Init Error", e); }
+}
+};
+
+const stripeBtn = getEl('stripego');
+if(stripeBtn) stripeBtn.onclick = async () => {
+if(cart.length === 0) return;
+const lineItems = cart.map(item => ({ price: item.stripe_price_id, quantity: item.qty }));
+const {error} = await stripe.redirectToCheckout({ lineItems: lineItems, mode: 'payment', successUrl: window.location.href + '?success=true', cancelUrl: window.location.href });
+if(error) alert(error.message);
+};
+
+if(window.location.search.includes('success=true')){
+cart=[]; save(); render();
+toastMsg("Payment Successful!<br>Cart Cleared.");
+window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+})();
+</script>

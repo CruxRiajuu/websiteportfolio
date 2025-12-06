@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video Gallery</title>
+<link href="https://fonts.googleapis.com/css2?family=Abel&display=swap" rel="stylesheet">
+<style>
+body {
+background-color: #1a1a1a;
+margin: 0;
+font-family: 'Abel', sans-serif;
+}
+
+.video-gallery {
+display: flex;
+flex-wrap: wrap;
+justify-content: center;
+gap: 20px;
+padding: 20px;
+margin-top: 100px;
+}
+
+.video-item {
+background-color: #2b2b2b;
+border-radius: 4px;
+overflow: hidden;
+box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+display: flex;
+flex-direction: column;
+flex: 0 1 320px;
+transition: all 0.4s ease-in-out; /* Smooth transitions for size/shadow changes */
+}
+
+/* This simple rule removes the pushdown margin on larger screens */
+@media (min-width: 769px) {
+.video-gallery {
+margin-top: 0;
+}
+.video-item {
+cursor: pointer;
+}
+
+/* Hover effect for tablet and PC */
+.video-item:hover {
+transform: scale(1.05); /* Slightly enlarges the video item */
+box-shadow: 0 8px 25px rgba(0, 255, 255, 0.3); /* Adds a subtle glow */
+z-index: 10; /* Ensures it appears above other items during hover */
+}
+}
+
+.video-embed {
+width: 100%;
+border: none;
+display: block;
+aspect-ratio: 16 / 9;
+}
+
+.video-description {
+padding: 10px 15px;
+text-align: center;
+}
+
+.video-description p {
+margin: 4px 0;
+}
+
+.video-title {
+font-family: 'Abel';
+color: #32E5FF;
+text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+font-size: 20px;
+font-style: italic;
+}
+
+.video-subtitle {
+font-family: 'Abel';
+color: #ECECEC;
+text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+font-size: 15px;
+}
+</style>
+</head>
+<body>
+
+<div class="video-gallery">
+
+<div class="video-item">
+<iframe class="video-embed" src="https://drive.google.com/file/d/10iKAzgiyFE2j7zmEJrkeC8aKNsaqWnKQ/preview" allowfullscreen></iframe>
+<div class="video-description">
+<p class="video-title">Neon Genesis Evangelion AMV</p>
+<p class="video-subtitle">Music: Spiritbox - Yellowjacket</p>
+</div>
+</div>
+
+<div class="video-item">
+<iframe class="video-embed" src="https://drive.google.com/file/d/14XrlABZ_xvuoMojLGcGrknHht6gsgNVV/preview" allowfullscreen></iframe>
+<div class="video-description">
+<p class="video-title">Above My Enemy Music Visualizer</p>
+<p class="video-subtitle">Music: Above My Enemy - Realm Of Chaos</p>
+</div>
+</div>
+
+<div class="video-item">
+<iframe class="video-embed" src="https://drive.google.com/file/d/1zhlMAqct7i5V-qUfjk8G_pDpuBgebmDc/preview" allowfullscreen></iframe>
+<div class="video-description">
+<p class="video-title">Spirit Urge Music Visualizer</p>
+<p class="video-subtitle">Music: Spirit Urge - JRPG Sampler 1</p>
+</div>
+</div>
+
+<div class="video-item">
+<iframe class="video-embed" src="https://drive.google.com/file/d/1oC02za8YCyE-dSx9MqOzJ9fFJMbntXf7/preview" allowfullscreen></iframe>
+<div class="video-description">
+<p class="video-title">Cretlaw</p>
+<p class="video-subtitle">TikTok Example</p>
+</div>
+</div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,2 @@
+<span class="buynow-button" onclick="addToCart(1)">ADD TO CART</span>
+<span class="viewcart-button" onclick="openCartModal()">VIEW CART</span>

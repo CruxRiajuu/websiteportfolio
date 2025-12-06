@@ -1,0 +1,188 @@
+<script>
+// --- 5. DASHBOARD VIEW LOGIC ---
+
+window.openDashboard = async (targetTab = 'purchases') => {
+const u = window.auth.currentUser;
+if(!u) return window.openModal('login');
+
+document.getElementById('user-dropdown').style.display = 'none';
+
+window.switchDashTab(targetTab);
+document.getElementById('dashboard-ui').style.display = 'flex';
+document.getElementById('firebase-modal-overlay').style.display = 'block';
+
+try {
+const doc = await window.db.collection('users').doc(u.uid).get({ source: 'server' });
+window.currentUserDoc = doc.exists ? doc.data() : { handle: "Guest", role: "User", verification_status: 'unverified' };
+
+let badgesHtml = "";
+const vStatus = window.currentUserDoc.verification_status;
+if(vStatus === 'verified') badgesHtml += `<span class="dash-badge badge-verified">VERIFIED ID</span>`;
+else if(vStatus === 'pending') badgesHtml += `<span class="dash-badge badge-unverified" style="color:#d4a017; border-color:#d4a017;">PENDING</span>`;
+else badgesHtml += `<span class="dash-badge badge-unverified">UNVERIFIED</span>`;
+
+if(window.currentUserDoc.subscription === 'subscribed') badgesHtml += ` <span class="dash-badge badge-subscribed">ARTIST PASS</span>`;
+if(window.currentUserDoc.subscription === 'premium') badgesHtml += ` <span class="dash-badge badge-premium">PREMIUM</span>`;
+
+document.getElementById('dash-header-info').innerHTML = `<h2>${window.currentUserDoc.handle}</h2><div style="margin-top:5px; color:#666; font-size:11px;">${window.currentUserDoc.role} // ${badgesHtml}</div>`;
+
+const sidebar = document.querySelector('.dash-sidebar');
+if(!document.getElementById('btn-settings')) {
+const setBtn = document.createElement('button');
+setBtn.id = 'btn-settings';
+setBtn.className = 'dash-nav-btn';
+setBtn.innerText = 'SETTINGS';
+setBtn.onclick = () => window.switchDashTab('settings');
+const discBtn = document.getElementById('dash-disconnect');
+sidebar.insertBefore(setBtn, discBtn);
+}
+
+window.switchDashTab(targetTab);
+} catch (e) { console.error(e); }
+};
+
+window.closeDashboard = () => window.closeAllModals();
+
+window.switchDashTab = (tab) => {
+const view = document.getElementById('dash-main-view');
+document.querySelectorAll('.dash-nav-btn').forEach(b => b.classList.remove('active'));
+
+if(tab === 'settings') {
+const setBtn = document.getElementById('btn-settings');
+if(setBtn) setBtn.classList.add('active');
+} else {
+const activeBtn = document.querySelector(`.dash-nav-btn[onclick*="'${tab}'"]`);
+if(activeBtn) activeBtn.classList.add('active');
+}
+
+// TAB: PURCHASES
+if(tab === 'purchases') {
+let html = `<h3>MY DOWNLOADS</h3>`;
+if(window.currentUserDoc.purchased_items && window.currentUserDoc.purchased_items.length > 0) {
+window.currentUserDoc.purchased_items.forEach(i => {
+html += `<a href="${i.link}" target="_blank" style="display:block; padding:15px; background:#121212; border:1px solid #333; margin-bottom:10px; color:#fff; text-decoration:none;">DOWNLOAD: ${i.name}</a>`;
+});
+} else { html += `<p style="color:#666; font-style:italic;">No data found.</p>`; }
+view.innerHTML = html;
+}
+
+// TAB: SETTINGS
+if(tab === 'settings') {
+const changes = window.currentUserDoc.name_changes || 0;
+const maxFree = 1;
+const remaining = maxFree - changes;
+const isFree = remaining > 0;
+
+view.innerHTML = `
+<h3>ACCOUNT SETTINGS</h3>
+<div style="background:#1a1a1a; padding:20px; border:1px solid #333; border-radius:6px;">
+<label style="display:block; color:#888; font-size:0.8rem; margin-bottom:5px;">CURRENT HANDLE</label>
+<div style="display:flex; gap:10px;">
+<input type="text" id="new-handle-input" value="${window.currentUserDoc.handle}" style="flex:1; background:#000; border:1px solid #444; color:#fff; padding:10px;">
+<button class="cyber-btn" onclick="attemptNameChange()" style="width:auto; margin:0; ${!isFree ? 'opacity:0.5; border-color:#666; color:#666;' : ''}">
+${isFree ? 'UPDATE' : 'PAY TO CHANGE'}
+</button>
+</div>
+<p style="font-size:0.8rem; color:${isFree ? '#0f0' : '#ff4444'}; margin-top:5px;">
+${isFree ? `Free changes remaining: ${remaining}` : `Free changes exhausted. Fee: $5.00`}
+</p>
+</div>
+`;
+}
+
+// TAB: ID VERIFICATION
+if(tab === 'verify') {
+const status = window.currentUserDoc.verification_status || 'unverified';
+const appeals = window.currentUserDoc.rejection_count || 0;
+const appealsLeft = 5 - appeals;
+
+if(status === 'verified') {
+view.innerHTML = `<h3>ID VERIFICATION</h3><div style="padding:30px; border:1px solid #0f0; background: rgba(0, 255, 0, 0.05); text-align:center;"><p style="color:#0f0; font-size:1.5rem; font-weight:bold; margin-bottom:10px;">ACCEPTED</p><p style="color:#aaa;">Your identity has been confirmed.</p></div><p style="color:#666; margin-top:20px; text-align:center;">You may now apply for Artist Status.</p>`;
+}
+else if(status === 'pending') {
+view.innerHTML = `<h3>VERIFICATION PENDING</h3><div style="padding:40px; border:1px solid #d4a017; background: rgba(212, 160, 23, 0.1); text-align:center;"><p style="color:#d4a017; font-weight:bold; font-size:1.2rem; margin-bottom:15px;">UNDER REVIEW</p><p style="color:#fff; font-size:0.95rem;">Your ID has been received.</p><p style="color:#aaa; font-size:0.9rem; margin-top:5px;">Please wait for an admin to accept or reject your application.</p></div>`;
+}
+else if(status === 'rejected') {
+if(appealsLeft <= 0) {
+view.innerHTML = `<h3 style="color:#ff0000;">ACCESS DENIED</h3><div style="padding:30px; border:1px solid #ff0000; background: rgba(255, 0, 0, 0.1); text-align:center;"><p style="color:#ff0000; font-weight:bold; font-size:1.2rem;">ACCOUNT PERMANENTLY REJECTED</p></div>`;
+} else {
+view.innerHTML = `<h3 style="color:#ff4444;">VERIFICATION REJECTED</h3><div style="background:#1a1a1a; padding:20px; border-left:4px solid #ff4444; margin-bottom:20px;"><p style="color:#fff; margin:0;"><strong>Reason:</strong> Your ID was unclear or invalid.</p></div><p style="color:#ff4444; font-weight:bold;">Appeals Remaining: ${appealsLeft}</p><button class="cyber-btn" onclick="retryVerify()">UPLOAD NEW ID</button>`;
+}
+} else {
+window.renderVerifyUpload(view);
+}
+}
+
+// TAB: ARTIST STUDIO
+if(tab === 'studio') {
+if(!window.currentUserDoc.verified) {
+view.innerHTML = `<h3>ARTIST STUDIO LOCKED</h3><div style="text-align:center; padding:40px; opacity:0.5;"><p style="color:#ff4444; font-size:1.2rem;">⚠ ACCESS DENIED</p><p>You must complete ID Verification first.</p></div>`; return;
+}
+
+const artistStatus = window.currentUserDoc.artist_status || 'unverified';
+const isFree = window.currentUserDoc.subscription === 'free';
+
+if(artistStatus === 'verified') {
+let uploadMsg = "Unlimited Uploads Enabled";
+let uploadColor = "#0f0";
+
+// UPDATE: Display specific constraints for Free Tier
+if(isFree) {
+uploadMsg = "FREE TIER LIMITS ACTIVE";
+uploadColor = "#d4a017";
+}
+
+view.innerHTML = `
+<h3>ARTIST STUDIO</h3>
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border:1px solid ${uploadColor}; padding:10px; background:rgba(0,0,0,0.2);">
+<div style="display:flex; flex-direction:column;">
+<span style="color:${uploadColor}; font-weight:bold; font-size:0.9rem;">${uploadMsg}</span>
+${isFree ? `<span style="color:#aaa; font-size:0.7rem; margin-top:4px;">Max 5 Items • Audio &lt;20MB • Video &lt;200MB</span>` : ''}
+</div>
+${isFree ? `<a href="${window.SUBSCRIPTION_URL}" target="_blank" style="color:#fff; font-size:0.8rem; text-decoration:underline; font-weight:bold;">UPGRADE</a>` : ''}
+</div>
+
+<button class="cyber-btn" onclick="document.getElementById('art-file-input').click()">+ UPLOAD TO PORTFOLIO</button>
+<input type="file" id="art-file-input" accept="image/*,video/*,audio/*" style="display:none;" onchange="handleArtUpload(this)">
+
+<div class="upload-progress-container" id="prog-container-art" style="margin-top:20px;"><div class="upload-progress-bar" id="prog-bar-art"></div></div>
+<p id="upload-status-art" style="margin-top:10px; color:#40c4ff; font-size:11px;"></p>
+`;
+}
+else if(artistStatus === 'pending') {
+view.innerHTML = `<h3>ARTIST VERIFICATION PENDING</h3><div style="padding:30px; border:1px solid #b28dff; background: rgba(178, 141, 255, 0.1); text-align:center;"><p style="color:#b28dff; font-weight:bold;">REVIEWING VIDEO PROOF</p><p style="color:#aaa; font-size:0.9rem;">We are analyzing your process video for AI usage.</p></div>`;
+}
+else {
+view.innerHTML = `
+<h3>ARTIST PROOF REQUIRED</h3>
+<p style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">Upload a video proving you created your work.</p>
+<div style="background:#000; padding:20px; border:1px solid #333; border-left:4px solid #b28dff; margin-bottom:20px; border-radius:6px;">
+<strong style="display:block; color:#b28dff; margin-bottom:10px; font-size:1.1rem; letter-spacing:1px;">REQUIREMENTS:</strong>
+<ul style="margin:0; padding-left:20px; color:#fff; font-size:1rem; line-height:1.6;">
+<li><strong>Digital Art:</strong> Show layers, history, & strokes.</li>
+<li><strong>Traditional:</strong> Show physical canvas & hand movement.</li>
+<li><strong>3D Art:</strong> Show wireframes & project view.</li>
+<li><strong>Music / Voice:</strong> Show DAW timeline or recording session.</li>
+<li><strong>ALL:</strong> Real-time only (NO Timelapses).</li>
+<li><strong>Max 5 Minutes (File: &lt;500MB)</strong></li>
+</ul>
+</div>
+<label for="video-file" class="drop-zone" id="drag-zone-vid">
+<svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4zM14 13h-3v3H9v-3H6v-2h3V8h2v3h3v2z"/></svg>
+<div class="drop-text-main" id="drop-text-vid">UPLOAD PROOF VIDEO</div>
+<div class="drop-text-sub">(CLICK OR DRAG VIDEO HERE)</div>
+</label>
+<input type="file" id="video-file" accept="video/*" onchange="handleVideoSelect(this)">
+<button id="transmit-btn-vid" onclick="transmitVideo()" class="cyber-btn" style="display:none;">TRANSMIT PROOF</button>
+<div class="upload-progress-container" id="prog-container-vid"><div class="upload-progress-bar" id="prog-bar-vid"></div></div>
+<p id="upload-status-vid" style="margin-top:10px; color:#40c4ff; font-size:11px;"></p>
+`;
+setTimeout(window.setupVideoDragDrop, 100);
+}
+}
+
+if(tab === 'disconnect') {
+view.innerHTML = `<h3 style="color:#ff4444; border-color:#ff4444;">TERMINATION REQUESTED</h3><div style="background:#161616; border:1px solid #333; padding:20px; text-align:center; box-shadow:0 0 30px rgba(255,0,0,0.1) inset;"><p style="color:#fff; font-size:1.1rem; font-family:monospace; margin-bottom:10px;">NEURAL LINK: <span style="color:#0f0;">ACTIVE</span></p><p style="color:#aaa; line-height:1.5;">You are attempting to sever the connection.<br>Do you wish to leave the matrix?</p><div id="disconnect-actions" style="margin-top:25px; display:flex; gap:10px; justify-content:center;"><button class="cyber-btn" onclick="closeDashboard()" style="border-color:#444; color:#aaa;">ABORT</button><button class="cyber-btn" onclick="processLogout()" style="border-color:#ff4444; color:#ff4444; background:rgba(255,0,0,0.1);">EJECT</button></div><div id="logout-sequence" style="display:none; margin-top:20px;"><p style="color:#ff4444; font-size:10px; letter-spacing:2px;">SEVERING CONNECTION...</p><div class="upload-progress-container" style="opacity:1; display:block; background:#300;"><div id="logout-bar" class="upload-progress-bar" style="background:#ff0000; width:0%; box-shadow:0 0 10px #ff0000;"></div></div></div></div>`;
+}
+};
+</script>

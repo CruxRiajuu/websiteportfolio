@@ -1,0 +1,235 @@
+<script src="https://js.stripe.com/v3/"></script>
+<script src="https://www.paypal.com/sdk/js?client-id=AUvRiSi6edPOgFdzxWGHQ-nXM6bCXwNWbi5ctTB8P03cfEieNiBRDtAAvJeRaZQYlMdiG9Eggj8MMOLf&currency=USD&intent=capture&components=buttons&enable-funding=paypal&disable-funding=card,credit"></script>
+
+<style>
+:root {
+--c-accent: #40c4ff;
+--c-accent-glow: rgba(64,196,255,0.8);
+--c-bg: #121212;
+--c-surface: #1e1e1e;
+--c-text: #ffffff;
+--font-stack: 'Myriad Pro', system-ui, -apple-system, sans-serif;
+}
+
+/* --- ANIMATIONS --- */
+@keyframes shine-sweep {
+0% { left: -100%; opacity: 0; } 20% { opacity: 1; } 100% { left: 200%; opacity: 0; }
+}
+@keyframes fadeIn { to { opacity: 1; } }
+
+/* LED Pulse */
+@keyframes beam-pulse {
+0% { opacity: 0.5; filter: drop-shadow(0 0 5px var(--c-accent)); }
+50% { opacity: 1; filter: drop-shadow(0 0 20px var(--c-accent)); }
+100% { opacity: 0.5; filter: drop-shadow(0 0 5px var(--c-accent)); }
+}
+
+/* --- BUTTON STYLES --- */
+.buynow-button, .viewcart-button, #cruxcheckout, #stripe-shell, #paypal-shell {
+background: linear-gradient(145deg, #1e1e1e, #161616) !important;
+color: var(--c-accent) !important;
+border: 1px solid #333 !important;
+border-left: 3px solid var(--c-accent) !important;
+border-right: 3px solid var(--c-accent) !important;
+font-family: var(--font-stack) !important; font-weight: 700 !important;
+text-transform: uppercase !important; letter-spacing: 0.05em !important;
+border-radius: 4px !important;
+cursor: pointer !important; box-shadow: 0 4px 10px rgba(0,0,0,0.5) !important;
+transition: all 0.1s ease-out !important;
+position: relative !important; overflow: hidden !important;
+user-select: none !important;
+}
+
+.buynow-button:active, .viewcart-button:active, #cruxcheckout:active, #stripe-shell:active {
+transform: scale(0.98) translateY(2px) !important;
+box-shadow: 0 0 5px var(--c-accent-glow) !important;
+filter: brightness(0.8) !important;
+}
+
+/* SITE BUTTONS (Normal Width) */
+.buynow-button, .viewcart-button {
+padding: 14px 30px !important;
+display: inline-flex !important;
+align-items: center !important; justify-content: center !important;
+width: auto !important; margin: 5px !important;
+}
+
+/* MODAL BUTTONS (Full Width) */
+/* FIXED: Removed !important from display so JS can hide it */
+#cruxcheckout, #stripe-shell, #paypal-shell {
+width: 100% !important;
+display: flex; /* removed !important here */
+align-items: center !important; justify-content: center !important;
+height: 45px !important; margin-bottom: 12px !important;
+}
+
+#cruxcheckout { background: var(--c-accent) !important; color: #000 !important; border: none !important; }
+
+/* FLASH LAYER */
+.buynow-button::after, .viewcart-button::after, #cruxcheckout::after, #stripe-shell::after, #paypal-shell::after {
+content: '' !important; position: absolute !important; top: 0 !important; left: -100% !important;
+width: 50% !important; height: 100% !important;
+background: linear-gradient(90deg, transparent, rgba(64,196,255,0.9), transparent) !important;
+transform: skewX(-20deg) !important; pointer-events: none !important;
+}
+
+/* HOVER STATES */
+.buynow-button:hover, .viewcart-button:hover, #stripe-shell:hover, #paypal-shell:hover {
+background: #252525 !important; border-color: var(--c-accent) !important;
+color: #fff !important; box-shadow: 0 0 20px var(--c-accent-glow) !important; transform: translateY(-2px) !important;
+}
+#cruxcheckout:hover { background: #fff !important; box-shadow: 0 0 30px var(--c-accent-glow) !important; }
+
+.buynow-button:hover::after, .viewcart-button:hover::after, #cruxcheckout:hover::after, #stripe-shell:hover::after, #paypal-shell:hover::after {
+animation: shine-sweep 0.5s ease-in-out forwards !important;
+}
+
+/* --- MODAL STRUCTURE --- */
+.crux-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(5px); z-index: 99999; justify-content: center; align-items: center; opacity: 0; animation: fadeIn 0.2s forwards; }
+
+.crux-modal {
+background: var(--c-bg); width: 94%; max-width: 500px;
+min-height: 350px;
+border-radius: 16px; border: 1px solid #333;
+box-shadow: 0 20px 80px rgba(0,0,0,0.9);
+display: flex; flex-direction: column;
+max-height: 90vh; position: relative; overflow: hidden;
+transition: height 0.3s ease;
+}
+
+#closebtn { position: absolute; top: 15px; right: 20px; background: none; border: none; color: #555; font-size: 2.5rem; line-height: 1; cursor: pointer; transition: 0.2s; z-index: 10; }
+#closebtn:hover { color: var(--c-accent); transform: scale(1.1); }
+
+/* --- HEADER & LEDS --- */
+.crux-header { padding: 30px 30px 10px; position: relative; }
+.crux-header-row { display: flex; justify-content: center; align-items: center; margin-bottom: 25px; position: relative; }
+.crux-header h2 { color: #fff; font-family: var(--font-stack); font-size: 1.8rem; font-weight: 800; letter-spacing: 0.1em; margin: 0; text-shadow: 0 0 15px rgba(64,196,255,0.4); }
+
+#cruxclear { position: absolute; right: 35px; top: 5px; background: transparent; border: 1px solid #553333; color: #ff5555; font-size: 0.7rem; font-weight: 800; padding: 4px 8px; border-radius: 4px; cursor: pointer; transition: 0.2s; letter-spacing: 0.05em; }
+#cruxclear:hover { background: #ff5555; color: #fff; box-shadow: 0 0 20px rgba(255, 0, 0, 0.8); }
+
+/* --- LED STRIP --- */
+.crux-line {
+height: 3px; background: transparent; width: 100%; position: relative; overflow: visible;
+display: flex; justify-content: center; align-items: center;
+}
+.led-left, .led-right {
+position: absolute; top: 0; bottom: 0; width: 55%;
+animation: beam-pulse 2s infinite ease-in-out;
+}
+.led-left {
+right: 50%;
+background: linear-gradient(to left, var(--c-accent) 0%, var(--c-accent) 20%, transparent 100%);
+}
+.led-right {
+left: 50%;
+background: linear-gradient(to right, var(--c-accent) 0%, var(--c-accent) 20%, transparent 100%);
+}
+
+/* --- BODY & ITEMS --- */
+.crux-body { padding: 20px 30px; overflow-y: auto; flex-grow: 1; }
+#cruxempty { text-align: center; color: #888; padding: 40px 0; font-size: 1.1rem; }
+
+.crux-item { background: var(--c-surface); border: 1px solid #2a2a2a; padding: 15px; margin-bottom: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+.crux-item:hover { border-color: #444; box-shadow: 0 0 15px rgba(64,196,255,0.1); }
+.crux-item-info strong { display: block; color: #fff; font-size: 1rem; margin-bottom: 4px; }
+.crux-item-info span { color: var(--c-accent); font-size: 0.85rem; font-weight: 600; }
+
+.qty-group { display: flex; gap: 8px; align-items: center; background: #161616; padding: 4px; border-radius: 6px; }
+.qty-btn { background: #333; color: #fff; border: none; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+.qty-btn:hover { background: var(--c-accent); color: #000; }
+.qty-del { background: transparent; color: #666; width: auto; padding: 0 5px;}
+.qty-del:hover { color: #ff4444; background: transparent; }
+
+/* --- FOOTER --- */
+.crux-footer { background: #161616; padding: 25px 30px; border-top: 1px solid #222; }
+
+#main-total-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; transition: opacity 0.3s; }
+#main-total-row span:first-child { color: #888; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.1em; }
+#main-total-row span:last-child { color: #fff; font-size: 2rem; font-weight: 800; line-height: 1; text-shadow: 0 0 15px rgba(64,196,255,0.3); }
+
+/* --- PAYMENT AREA --- */
+#cruxpay { display: none; margin-top: 0px; height: 100%; flex-direction: column; justify-content: center; }
+
+#cruxback { width: 100%; background: transparent; color: #666; border: 1px solid #333; padding: 10px; border-radius: 6px; font-weight: 700; font-size: 0.9rem; cursor: pointer; margin-bottom: 15px; transition: 0.2s; }
+#cruxback:hover { color: #fff; border-color: #666; background: #222; }
+#cruxback:active { transform: scale(0.98); }
+
+#stripego, #paypalgo {
+width: 92% !important; height: 36px !important;
+background: linear-gradient(145deg, #2a2a2a, #1a1a1a) !important;
+border-radius: 4px !important;
+display: flex; justify-content: center; align-items: center;
+cursor: pointer; border: none !important;
+}
+#stripego:hover, #paypalgo:hover { background: #333 !important; }
+#stripe-img { height: 22px; width: auto; filter: brightness(0) invert(1) drop-shadow(0 0 2px rgba(255,255,255,0.5)); }
+
+#stripe-shell, #paypal-shell { width: 100% !important; height: 45px !important; margin-bottom: 12px; }
+
+/* --- TOAST & CONFIRM --- */
+#cruxtoast { position: fixed; bottom: 30px; right: 30px; z-index: 999999; display: flex; flex-direction: column; gap: 10px; align-items: flex-end; pointer-events: none; }
+.crux-toast-msg { background: #1e1e1e; border-left: 4px solid var(--c-accent); color: #fff; padding: 16px 24px; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-family: var(--font-stack); font-size: 0.95rem; animation: slideIn 0.3s ease; position: relative; overflow: hidden; }
+.crux-toast-msg::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(64,196,255,0.4), transparent); transform: skewX(-20deg); animation: shine-sweep 1s ease-in-out forwards; }
+@keyframes slideIn { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+#crux-confirm-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+.crux-confirm-box { background: #1a1a1a; border: 1px solid #ff4444; border-radius: 12px; padding: 30px; text-align: center; max-width: 300px; box-shadow: 0 0 50px rgba(255,0,0,0.3); animation: fadeIn 0.2s; }
+.crux-confirm-box h3 { color: #fff; margin: 0 0 10px; font-size: 1.4rem; font-family: var(--font-stack); }
+.crux-confirm-box p { color: #aaa; margin: 0 0 20px; font-size: 0.9rem; }
+.confirm-actions { display: flex; gap: 10px; justify-content: center; }
+.confirm-btn { padding: 10px 20px; border-radius: 6px; border: none; font-weight: 800; cursor: pointer; }
+.btn-no { background: #333; color: #fff; } .btn-no:hover { background: #444; }
+.btn-yes { background: #ff4444; color: #fff; box-shadow: 0 0 15px rgba(255,68,68,0.4); } .btn-yes:hover { background: #ff2222; box-shadow: 0 0 25px rgba(255,68,68,0.6); }
+</style>
+
+<div id="cruxcart" class="crux-overlay" onclick="event.target===this&&closeCruxCart()">
+<div class="crux-modal">
+<button id="closebtn" onclick="closeCruxCart()">×</button>
+<div class="crux-header">
+<div class="crux-header-row">
+<h2>YOUR CART</h2>
+<button id="cruxclear">CLEAR</button>
+</div>
+<div class="crux-line">
+<div class="led-left"></div>
+<div class="led-right"></div>
+</div>
+</div>
+
+<div class="crux-body" id="main-cart-body">
+<div id="cruxitems"></div>
+<div id="cruxempty">Cart is empty</div>
+</div>
+
+<div class="crux-body" id="cruxpay" style="display:none;">
+<div style="margin-top:20px;">
+<div id="stripe-shell">
+<button id="stripego">
+<img id="stripe-img" src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" alt="Stripe">
+</button>
+</div>
+<div id="paypal-shell">
+<div id="paypalgo"></div>
+</div>
+<button id="cruxback">← BACK TO ITEMS</button>
+</div>
+</div>
+
+<div class="crux-footer">
+<div class="crux-total-row" id="main-total-row"><span>TOTAL</span><span id="cruxtotal">$0.00</span></div>
+<button id="cruxcheckout">PROCEED TO CHECKOUT</button>
+</div>
+</div>
+</div>
+
+<div id="crux-confirm-overlay">
+<div class="crux-confirm-box">
+<h3>CLEAR CART?</h3>
+<p>This will remove all items.</p>
+<div class="confirm-actions">
+<button class="confirm-btn btn-no" onclick="closeConfirm()">CANCEL</button>
+<button class="confirm-btn btn-yes" onclick="confirmClear()">CLEAR</button>
+</div>
+</div>
+</div>
+<div id="cruxtoast"></div>

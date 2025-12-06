@@ -1,0 +1,28 @@
+<script>
+let isTicking = false;
+function updateFixedElements() {
+if (isTicking) return;
+isTicking = true;
+window.requestAnimationFrame(() => {
+const fixedElements = document.querySelectorAll('[data-fixed-element]');
+let topOffset = 0;
+let zIndex = 999999999;
+fixedElements.forEach(el => {
+const isHidden = el.classList.contains('hidden');
+el.style.zIndex = zIndex;
+zIndex--;
+if (!isHidden) {
+el.style.top = topOffset + 'px';
+topOffset += el.offsetHeight;
+} else {
+el.style.top = `-${el.offsetHeight}px`;
+}
+});
+document.body.style.paddingTop = topOffset + 'px';
+isTicking = false;
+});
+}
+window.addEventListener('fixed_elements_update', updateFixedElements);
+document.addEventListener('DOMContentLoaded', updateFixedElements);
+window.addEventListener('resize', updateFixedElements);
+</script>

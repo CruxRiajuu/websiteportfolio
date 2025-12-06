@@ -1,0 +1,19 @@
+<center>
+<div style="margin: 10px 0;">
+<p style="font-family: 'MangaMasterBB-BoldItal'; color: #F6F6F6; text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5); font-size: 20px;">
+I’m Crux. My expertise lies in:
+</p>
+</div>
+
+<div style="margin: 10px 0;">
+<p style="font-family: 'MangaMasterBB-BoldItal'; color: #F6F6F6; text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5); font-size: 15px;">Illustration, Animation, V-Tuber Modeling, Logo Design, and Video Editing.
+<br>
+</p>
+</div>
+
+<div style="margin: 10px 0;">
+<p style="font-family: 'MangaMasterBB-BoldItal'; color: #F6F6F6; text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5); font-size: 15px;">
+Let me give your ideas life.
+</p>
+</div>
+</center>

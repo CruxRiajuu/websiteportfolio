@@ -1,0 +1,145 @@
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+
+<script>
+// --- GLOBAL VARIABLES ---
+window.currentUserDoc = {};
+window.stagedFile = null;
+window.SUBSCRIPTION_URL = "https://buy.stripe.com/YOUR_LINK_HERE";
+
+// --- 1. FIREBASE CONFIG ---
+const firebaseConfig = {
+apiKey: "AIzaSyCqad15n5UeSl2AwnfzeIJuZLCNrVm0CrE",
+authDomain: "userportalv2.firebaseapp.com",
+projectId: "userportalv2",
+storageBucket: "userportalv2.firebasestorage.app",
+messagingSenderId: "420794125847",
+appId: "1:420794125847:web:ad75a2d5f7380934061652"
+};
+
+window.app = firebase.initializeApp(firebaseConfig);
+window.auth = firebase.auth();
+window.db = firebase.firestore();
+window.storage = firebase.storage();
+
+// --- 2. HELPERS ---
+window.sanitizeError = (message) => {
+if(message.includes('auth/email-already-in-use')) return "Identity already registered.";
+if(message.includes('auth/wrong-password')) return "Access Denied.";
+if(message.includes('auth/user-not-found')) return "Identity not found.";
+return "System Error: " + message;
+};
+
+window.showToast = (msg, type = 'normal') => {
+const box = document.getElementById('cyber-toast-container');
+if(!box) return;
+const t = document.createElement('div');
+t.className = 'cyber-toast';
+if(type === 'error') t.classList.add('error');
+if(type === 'success') t.classList.add('success');
+t.innerHTML = msg;
+box.appendChild(t);
+setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateX(50px)'; setTimeout(()=>t.remove(), 300); }, 3000);
+};
+
+// --- 3. BASIC UI HANDLERS ---
+window.openModal = (type) => {
+document.getElementById('firebase-modal-overlay').style.display = 'block';
+document.querySelectorAll('.firebase-modal').forEach(m => m.style.display = 'none');
+if(type === 'login') document.getElementById('firebase-login-modal').style.display = 'block';
+if(type === 'register') document.getElementById('firebase-register-modal').style.display = 'block';
+if(type === 'profile') document.getElementById('firebase-profile-modal').style.display = 'block';
+if(type === 'reset') document.getElementById('firebase-reset-modal').style.display = 'block';
+};
+
+window.closeAllModals = () => {
+document.getElementById('firebase-modal-overlay').style.display = 'none';
+document.querySelectorAll('.firebase-modal').forEach(m => m.style.display = 'none');
+document.getElementById('dashboard-ui').style.display = 'none';
+};
+
+// --- 4. AUTH EVENT LISTENERS ---
+document.addEventListener('DOMContentLoaded', function() {
+const overlay = document.getElementById('firebase-modal-overlay');
+if(overlay) overlay.addEventListener('click', (e) => {
+if (e.target.id === 'firebase-modal-overlay') window.closeAllModals();
+});
+
+document.querySelectorAll('.modal-close').forEach(b => b.onclick = window.closeAllModals);
+
+const createBtn = document.getElementById('create-btn');
+if(createBtn) createBtn.addEventListener('click', () => {
+const e = document.getElementById('reg-email').value;
+const p = document.getElementById('reg-pass').value;
+window.auth.createUserWithEmailAndPassword(e, p)
+.then((cred) => window.checkProfile(cred.user))
+.catch(e => document.getElementById('reg-error').textContent = window.sanitizeError(e.message));
+});
+
+const signinBtn = document.getElementById('signin-btn');
+if(signinBtn) signinBtn.addEventListener('click', () => {
+const e = document.getElementById('login-email').value;
+const p = document.getElementById('login-password').value;
+window.auth.signInWithEmailAndPassword(e, p)
+.then((cred) => {
+window.closeAllModals();
+window.checkProfile(cred.user);
+})
+.catch(e => document.getElementById('login-error').textContent = window.sanitizeError(e.message));
+});
+
+// --- SAVE IDENTITY (WITH DUPLICATE CHECK) ---
+const saveProfileBtn = document.getElementById('save-profile-btn');
+if(saveProfileBtn) saveProfileBtn.addEventListener('click', async () => {
+const u = window.auth.currentUser;
+const h = document.getElementById('setup-handle').value.trim();
+const r = document.getElementById('setup-role').value;
+const nsfw = document.getElementById('setup-nsfw').checked;
+
+if(!h) return window.showToast("Username required", "error");
+
+// 1. CHECK FOR DUPLICATES
+const snap = await window.db.collection('users').where('handle', '==', h).get();
+if(!snap.empty) {
+return window.showToast("Username Taken. Choose another.", "error");
+}
+
+// 2. SAVE IF CLEAR
+if(u) {
+await window.db.collection('users').doc(u.uid).set({
+handle: h,
+role: r,
+nsfw_enabled: nsfw,
+email: u.email,
+verified: false,
+verification_status: 'unverified',
+artist_status: 'unverified',
+subscription: 'free',
+created: new Date(),
+rejection_count: 0,
+name_changes: 0 // New field for tracking
+});
+window.closeAllModals();
+window.showToast("Identity Established. Welcome, " + h, "success");
+}
+});
+});
+
+window.checkProfile = async (user) => {
+const doc = await window.db.collection('users').doc(user.uid).get();
+if (!doc.exists) {
+window.closeAllModals();
+window.openModal('profile');
+}
+};
+
+window.resetPass = () => {
+const e = document.getElementById('login-email').value;
+if(!e) return window.showToast("Enter email address first.", "error");
+window.auth.sendPasswordResetEmail(e)
+.then(()=>window.showToast("Reset Link Sent.", "success"))
+.catch(e=>window.showToast(window.sanitizeError(e.message), "error"));
+};
+</script>

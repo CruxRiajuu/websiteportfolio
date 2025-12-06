@@ -1,0 +1,187 @@
+<style>
+/* --- GOD MODE CONTAINER --- */
+#admin-ui {
+position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+color: #fff; z-index: 2147483647;
+display: none; /* Flex applied via JS */
+justify-content: center; align-items: center;
+font-family: 'Myriad Pro', sans-serif;
+overflow: hidden; margin: 0; padding: 0;
+}
+
+/* --- HEADER (Centered Stack) --- */
+.god-header {
+position: absolute; top: 0; left: 0; width: 100%; z-index: 100;
+height: 80px;
+background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, transparent 100%);
+display: flex; flex-direction: column;
+justify-content: center; align-items: center;
+pointer-events: none;
+}
+
+.god-header h2 {
+margin: 0; color: #ff4444; letter-spacing: 4px; font-size: 1.8rem; line-height: 1;
+text-shadow: 0 0 20px #ff4444;
+}
+.god-header .sub-title {
+color: #666; font-size: 0.7rem; letter-spacing: 8px; margin-top: 5px; font-weight: bold;
+}
+
+.god-close-btn {
+position: absolute; top: 20px; right: 30px;
+background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;
+pointer-events: auto; transition: 0.2s;
+}
+.god-close-btn:hover { color: #ff4444; transform: scale(1.1); }
+
+/* --- CAROUSEL STAGE --- */
+.god-stage {
+position: relative; width: 100%; height: 100%;
+display: flex; justify-content: center; align-items: center;
+perspective: 1500px;
+}
+
+.god-rotator-ring {
+position: relative; display: flex; justify-content: center; align-items: center;
+transform-style: preserve-3d;
+transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* --- THE DOSSIER CARD --- */
+.god-card {
+position: absolute;
+width: 400px; max-width: 90vw; height: 640px; max-height: 85vh;
+left: 50%; top: 50%; transform: translate(-50%, -50%);
+margin: 0;
+
+background: rgba(20, 20, 20, 0.95);
+border: 1px solid #444; border-top: 4px solid #444;
+box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+border-radius: 12px;
+
+display: flex; flex-direction: column;
+transition: transform 0.6s ease, opacity 0.6s ease, filter 0.3s ease, border-color 0.3s ease;
+will-change: transform, opacity;
+backdrop-filter: blur(10px);
+}
+
+.god-card.active {
+z-index: 10; opacity: 1;
+box-shadow: 0 0 50px rgba(64, 196, 255, 0.2);
+border-color: #555;
+}
+
+/* Card Internals */
+.god-card-header { padding: 20px; border-bottom: 1px solid #333; background: rgba(0,0,0,0.3); text-align: left; }
+.god-card-header h3 { margin: 0; font-size: 1.6rem; color: #fff; text-transform: uppercase; }
+.god-card-header span { color: #888; font-family: monospace; font-size: 0.8rem; }
+
+.god-card-body { flex: 1; padding: 20px; overflow-y: auto; }
+.god-media-box {
+width: 100%; height: 220px; background: #000; border: 1px solid #333; margin-bottom: 15px;
+display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.god-media-box img, .god-media-box video { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+.god-data-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; border-bottom: 1px solid #222; padding-bottom: 4px; }
+.god-label { color: #666; text-transform: uppercase; font-size: 0.75rem; }
+.god-val { color: #ccc; font-weight: bold; }
+
+/* Buttons */
+.god-actions { padding: 0; display: flex; height: 60px; border-top: 1px solid #333; }
+.god-btn { flex: 1; border: none; font-weight: 900; font-size: 1.1rem; cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 2px; }
+.god-btn:active { transform: scale(0.98); }
+
+.god-btn-reject { background: #150000; color: #ff4444; }
+.god-btn-reject:hover { background: #ff4444; color: #000; box-shadow: 0 0 30px #ff4444; }
+.god-btn-approve { background: #001500; color: #00ff00; border-left: 1px solid #333; }
+.god-btn-approve:hover { background: #00ff00; color: #000; box-shadow: 0 0 30px #00ff00; }
+
+/* Footer */
+.god-card-footer {
+padding: 10px; background: #0a0a0a; text-align: center;
+font-family: monospace; font-size: 0.7rem; color: #444;
+border-top: 1px solid #222; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;
+}
+
+/* Animations */
+@keyframes phaseOutApprove {
+0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.8; box-shadow: 0 0 100px #0f0; }
+100% { transform: translate(-50%, -1000px) scale(0.5); opacity: 0; }
+}
+@keyframes phaseOutReject {
+0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+50% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.8; box-shadow: 0 0 100px #f00; }
+100% { transform: translate(-50%, 1000px) rotate(20deg); opacity: 0; }
+}
+.phase-approve { animation: phaseOutApprove 0.6s forwards ease-in !important; z-index: 99 !important; pointer-events: none; }
+.phase-reject { animation: phaseOutReject 0.6s forwards ease-in !important; z-index: 99 !important; pointer-events: none; }
+
+/* Empty State */
+.god-empty { text-align: center; color: #444; font-size: 2rem; letter-spacing: 5px; text-transform: uppercase; animation: pulse 2s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.7; } }
+
+/* --- CUSTOM CONFIRM MODAL STYLES --- */
+#cyber-confirm-overlay {
+position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2147483650;
+display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px);
+}
+.cyber-confirm-box {
+background: #121212; border: 1px solid #444; padding: 30px;
+max-width: 400px; width: 90%; text-align: center; border-radius: 8px;
+box-shadow: 0 0 50px rgba(0,0,0,0.8); position: relative; overflow: hidden;
+animation: fadeIn 0.2s ease-out;
+}
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+.cyber-confirm-box h3 { margin: 0 0 15px; font-size: 1.4rem; color: #fff; text-transform: uppercase; letter-spacing: 2px; }
+.cyber-confirm-box p { color: #aaa; margin-bottom: 25px; line-height: 1.5; }
+.cyber-confirm-actions { display: flex; gap: 15px; justify-content: center; }
+
+.cc-btn {
+padding: 12px 25px; border: none; font-weight: bold; cursor: pointer;
+border-radius: 4px; text-transform: uppercase; letter-spacing: 1px; flex: 1;
+transition: all 0.1s ease-out;
+}
+.cc-btn:active { transform: scale(0.96); }
+
+.cc-yes { background: var(--c-accent); color: #000; box-shadow: 0 0 15px rgba(64,196,255,0.2); }
+.cc-yes:hover { background: #fff; box-shadow: 0 0 25px rgba(64,196,255,0.6); }
+.cc-no { background: #333; color: #fff; border: 1px solid #444; }
+.cc-no:hover { background: #444; border-color: #666; }
+
+/* Dynamic Border Color */
+.confirm-green { border-top: 4px solid #0f0; }
+.confirm-green .cc-yes { background: #0f0; box-shadow: 0 0 15px rgba(0,255,0,0.3); }
+.confirm-green .cc-yes:hover { background: #fff; box-shadow: 0 0 25px rgba(0,255,0,0.6); }
+
+.confirm-red { border-top: 4px solid #ff4444; }
+.confirm-red .cc-yes { background: #ff4444; color: #fff; box-shadow: 0 0 15px rgba(255,68,68,0.3); }
+.confirm-red .cc-yes:hover { background: #ff2222; box-shadow: 0 0 30px rgba(255,68,68,0.6); }
+</style>
+
+<div id="admin-ui">
+<div class="god-header">
+<h2>GOD MODE</h2>
+<div class="sub-title">TERMINAL</div>
+<button class="god-close-btn" onclick="closeAdminPanel()">×</button>
+</div>
+
+<div class="god-stage">
+<div id="god-rotator" class="god-rotator-ring"></div>
+<div id="god-empty-msg" class="god-empty" style="display:none;">SYSTEM CLEAR</div>
+</div>
+</div>
+
+<div id="cyber-confirm-overlay">
+<div class="cyber-confirm-box" id="cyber-confirm-box">
+<h3 id="cc-title">CONFIRM ACTION</h3>
+<p id="cc-msg">Are you sure?</p>
+<div class="cyber-confirm-actions">
+<button class="cc-btn cc-no" id="cc-btn-no">CANCEL</button>
+<button class="cc-btn cc-yes" id="cc-btn-yes">CONFIRM</button>
+</div>
+</div>
+</div>

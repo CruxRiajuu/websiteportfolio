@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+/* --- CYBERPUNK VARIABLES --- */
+:root {
+--c-accent: #40c4ff;
+--c-accent-glow: rgba(64,196,255,0.8);
+--c-nav-bg-top: #1e1e1e;
+--c-nav-bg-bot: #121212;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* --- ANIMATIONS --- */
+@keyframes shine-sweep {
+0% { left: -100%; opacity: 0; }
+20% { opacity: 1; }
+100% { left: 200%; opacity: 0; }
+}
+
+/* --- NAV CONTAINER --- */
+.top-bar-nav {
+font-family: 'Myriad Pro', system-ui, -apple-system, sans-serif;
+position: fixed;
+left: 0; right: 0; top: 0;
+transition: transform 0.4s cubic-bezier(0.2, 0, 0, 1);
+transform: translateY(0);
+will-change: transform;
+z-index: 9000;
+}
+.top-bar-nav.hidden {
+transform: translateY(-100%);
+}
+
+.top-bar {
+/* Matte Gradient Background */
+background: linear-gradient(180deg, var(--c-nav-bg-top), var(--c-nav-bg-bot));
+border-bottom: 1px solid #333;
+box-shadow: 0 5px 20px rgba(0,0,0,0.8);
+}
+
+.top-bar-container {
+display: flex;
+justify-content: space-between;
+align-items: center;
+/* REDUCED PADDING FOR THINNER BAR */
+padding: 6px 25px;
+max-width: 1400px;
+margin: 0 auto;
+}
+
+/* --- LOGO --- */
+.square-enix-logo img {
+/* REDUCED HEIGHT */
+height: 34px;
+width: auto;
+filter: brightness(0.9);
+transition: transform 0.2s ease, filter 0.2s ease;
+display: block;
+}
+.square-enix-logo img:hover {
+transform: scale(1.05);
+filter: brightness(1.2) drop-shadow(0 0 10px var(--c-accent-glow));
+}
+
+/* --- NAVIGATION LINKS --- */
+.top-nav-links { display: flex; align-items: center; gap: 30px; }
+
+.top-nav-link {
+color: #888;
+text-decoration: none;
+font-size: 13px;
+font-weight: 700;
+text-transform: uppercase;
+letter-spacing: 0.1em;
+transition: all 0.2s ease;
+position: relative;
+overflow: hidden;
+padding: 5px 0;
+}
+
+/* Glitch Flash Effect */
+.top-nav-link::after {
+content: ''; position: absolute; top: 0; left: -100%;
+width: 50%; height: 100%;
+background: linear-gradient(90deg, transparent, rgba(64,196,255,0.6), transparent);
+transform: skewX(-20deg);
+pointer-events: none;
+}
+
+.top-nav-link:hover {
+color: #fff;
+text-shadow: 0 0 8px var(--c-accent);
+}
+.top-nav-link:hover::after {
+animation: shine-sweep 0.4s ease-out forwards;
+}
+.top-nav-link:active {
+transform: scale(0.95);
+color: var(--c-accent);
+}
+
+/* --- ICONS (Cart & Profile) --- */
+.cart-icon, .profile-icon {
+color: #888;
+cursor: pointer;
+line-height: 1;
+transition: all 0.2s ease;
+text-decoration: none;
+position: relative;
+display: flex; align-items: center;
+}
+
+.cart-icon svg, .profile-icon svg {
+height: 19px; /* Slightly smaller to match thin bar */
+width: auto;
+display: block;
+fill: currentColor;
+transition: all 0.2s ease;
+}
+
+.cart-icon:hover, .profile-icon:hover {
+color: #fff;
+filter: drop-shadow(0 0 5px var(--c-accent));
+}
+.cart-icon:active, .profile-icon:active {
+transform: scale(0.9);
+}
+
+/* --- CART BADGE --- */
+.cart-badge {
+display: none;
+position: absolute;
+top: -8px;
+right: -10px;
+background-color: var(--c-accent);
+color: #000;
+border-radius: 3px;
+min-width: 16px;
+height: 16px;
+font-size: 10px;
+font-weight: 900;
+line-height: 16px;
+text-align: center;
+padding: 0 3px;
+box-shadow: 0 0 10px var(--c-accent-glow);
+border: 1px solid #fff;
+z-index: 10;
+}
+.cart-badge.visible { display: block; }
+
+</style>
+</head>
+<body>
+
+<nav class="top-bar-nav" data-fixed-element>
+<div class="top-bar">
+<div class="top-bar-container">
+
+<div class="square-enix-logo">
+<a href="https://spiritastudio.com/">
+<img src="https://i.imgur.com/tyNTFAM.png" alt="Logo">
+</a>
+</div>
+
+<div class="top-nav-links">
+<a href="#featuredart" class="top-nav-link">Featured Art</a>
+<a href="#updates" class="top-nav-link">Updates</a>
+<a href="#contact" class="top-nav-link">Contact</a>
+<a href="https://neotype.shop" class="top-nav-link">Merch</a>
+
+<div class="cart-icon">
+<svg aria-label="Cart" focusable="false" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M551.991 64H129.28l-8.329-44.423C118.822 8.226 108.911 0 97.362 0H12C5.373 0 0 5.373 0 12v8c0 6.627 5.373 12 12 12h78.72l69.927 372.946C150.305 416.314 144 431.42 144 448c0 35.346 28.654 64 64 64s64-28.654 64-64a63.681 63.681 0 0 0-8.583-32h145.167a63.681 63.681 0 0 0-8.583 32c0 35.346 28.654 64 64 64 35.346 0 64-28.654 64-64 0-17.993-7.435-34.24-19.388-45.868C506.022 391.891 496.76 384 485.328 384H189.28l-12-64h331.381c11.368 0 21.177-7.976 23.496-19.105l43.331-208C578.592 77.991 567.215 64 551.991 64zM240 448c0 17.645-14.355 32-32 32s-32-14.355-32-32 14.355-32 32-32 32 14.355 32 32zm224 32c-17.645 0-32-14.355-32-32s14.355-32 32-32 32 14.355 32 32-14.355 32-32 32zm38.156-192H171.28l-36-192h406.876l-40 192z"></path></svg>
+<span id="cart-item-count" class="cart-badge"></span>
+</div>
+
+<a href="javascript:void(0);" class="profile-icon">
+<svg aria-label="Profile" focusable="false" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H418.3c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304H178.3z"></path></svg>
+</a>
+
+</div>
+</div>
+</div>
+</nav>
+
+<script>
+// 1. Hide on Scroll Logic
+const topBarToHide = document.querySelector('.top-bar-nav');
+if (topBarToHide) {
+let lastScrollY = window.scrollY;
+let ticking = false;
+const updateVisibility = () => {
+const currentScrollY = window.scrollY;
+if (currentScrollY > lastScrollY && currentScrollY > 150) {
+if (!topBarToHide.classList.contains('hidden')) {
+topBarToHide.classList.add('hidden');
+}
+} else if (currentScrollY < lastScrollY || currentScrollY <= 50) {
+if (topBarToHide.classList.contains('hidden')) {
+topBarToHide.classList.remove('hidden');
+}
+}
+lastScrollY = currentScrollY;
+ticking = false;
+};
+const onScroll = () => {
+if (!ticking) {
+window.requestAnimationFrame(updateVisibility);
+ticking = true;
+}
+};
+window.addEventListener('scroll', onScroll, { passive: true });
+}
+
+// 2. Connect Cart Icon to Modal
+document.addEventListener('DOMContentLoaded', function() {
+const cartIcon = document.querySelector('.top-bar-nav .cart-icon');
+
+const updateBadge = () => {
+const savedCart = JSON.parse(localStorage.getItem('crux2025')||'[]');
+const badge = document.getElementById('cart-item-count');
+const count = savedCart.reduce((sum, item) => sum + item.qty, 0);
+
+if (badge) {
+if (count > 0) {
+badge.textContent = count;
+badge.classList.add('visible');
+} else {
+badge.classList.remove('visible');
+}
+}
+};
+
+updateBadge();
+
+if (cartIcon) {
+cartIcon.addEventListener('click', function() {
+if (typeof openCartModal === 'function') {
+openCartModal();
+} else {
+console.warn('Cart modal script not loaded yet.');
+}
+});
+}
+
+window.addEventListener('click', () => setTimeout(updateBadge, 500));
+});
+</script>
+</body>
+</html>

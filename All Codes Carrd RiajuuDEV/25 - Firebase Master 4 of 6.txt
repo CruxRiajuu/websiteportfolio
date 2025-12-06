@@ -1,0 +1,344 @@
+<script>
+// --- 6. FEATURE LOGIC & HELPERS ---
+
+// --- QUOTA CHECKER ---
+window.checkQuota = async () => {
+if(window.currentUserDoc.subscription !== 'free') return true;
+try {
+const snap = await window.db.collection('users').doc(window.auth.currentUser.uid).collection('uploads').get();
+if(snap.size >= 5) {
+window.showToast("FREE LIMIT REACHED (5/5). Upgrade to upload more.", "error");
+return false;
+}
+return true;
+} catch(e) { return false; }
+};
+
+window.attemptNameChange = async () => {
+const newHandle = document.getElementById('new-handle-input').value.trim();
+if(newHandle === window.currentUserDoc.handle) return window.showToast("No change detected.", "error");
+if(!newHandle) return window.showToast("Username cannot be empty.", "error");
+
+const changes = window.currentUserDoc.name_changes || 0;
+
+if(changes >= 1) return alert("You have used your free name change. Please pay $5 to continue (Payment Link Placeholder).");
+
+if(!confirm(`Change username to "${newHandle}"? This is your ONE free change.`)) return;
+
+try {
+const snap = await window.db.collection('users').where('handle', '==', newHandle).get();
+if(!snap.empty) return window.showToast("Username taken.", "error");
+
+await window.db.collection('users').doc(window.auth.currentUser.uid).update({
+handle: newHandle,
+name_changes: firebase.firestore.FieldValue.increment(1)
+});
+
+window.showToast("Username Updated!", "success");
+window.currentUserDoc.handle = newHandle;
+window.currentUserDoc.name_changes = (window.currentUserDoc.name_changes || 0) + 1;
+document.querySelector('#dash-header-info h2').innerText = newHandle;
+window.switchDashTab('settings');
+} catch(e) {
+window.showToast("Error: " + e.message, "error");
+}
+};
+
+window.renderVerifyUpload = (view) => {
+view.innerHTML = `
+<h3>ID VERIFICATION REQUIRED</h3>
+<p style="font-size:13px; color:#888;">Upload government ID to unlock features.</p>
+<label for="id-file" class="drop-zone" id="drag-zone">
+<svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"></path></svg>
+<div class="drop-text-main" id="drop-text">SCAN CREDENTIALS</div>
+</label>
+<input type="file" id="id-file" onchange="handleManualSelect(this)">
+<button id="transmit-btn" onclick="transmitData()" class="cyber-btn" style="display:none;">TRANSMIT DATA</button>
+<div class="upload-progress-container" id="prog-container-verify"><div class="upload-progress-bar" id="prog-bar-verify"></div></div>
+<p id="upload-status-verify" style="margin-top:10px; color:#40c4ff; font-size:11px;"></p>
+`;
+setTimeout(window.setupDragDrop, 100);
+}
+
+window.retryVerify = () => {
+window.renderVerifyUpload(document.getElementById('dash-main-view'));
+}
+
+window.processLogout = () => {
+document.getElementById('disconnect-actions').style.display = 'none';
+document.getElementById('logout-sequence').style.display = 'block';
+const bar = document.getElementById('logout-bar');
+let width = 0;
+const interval = setInterval(() => {
+if(width >= 100) {
+clearInterval(interval);
+window.showToast("DISCONNECTED.", "error");
+setTimeout(() => {
+window.auth.signOut();
+window.closeAllModals();
+location.reload();
+}, 800);
+} else {
+width += 5;
+bar.style.width = width + '%';
+}
+}, 50);
+};
+
+// --- DRAG & DROP HANDLERS ---
+window.setupDragDrop = () => {
+const dz = document.getElementById('drag-zone');
+if(!dz) return;
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+dz.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
+});
+dz.addEventListener('dragover', () => dz.style.background = '#1a1a1a');
+dz.addEventListener('dragleave', () => dz.style.background = '#0a0a0a');
+dz.addEventListener('drop', (e) => {
+dz.style.background = '#0a0a0a';
+if(e.dataTransfer.files.length > 0) {
+document.getElementById('drop-text').innerText = "ACQUIRED: " + e.dataTransfer.files[0].name;
+document.getElementById('drag-zone').style.borderColor = "#40c4ff";
+window.startUpload(e.dataTransfer.files[0], 'verification');
+}
+});
+};
+
+window.setupVideoDragDrop = () => {
+const dz = document.getElementById('drag-zone-vid');
+if(!dz) return;
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+dz.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
+});
+dz.addEventListener('dragover', () => dz.style.background = '#1a1a1a');
+dz.addEventListener('dragleave', () => dz.style.background = '#0a0a0a');
+dz.addEventListener('drop', (e) => {
+dz.style.background = '#0a0a0a';
+if(e.dataTransfer.files.length > 0) {
+document.getElementById('drop-text-vid').innerText = "VIDEO STAGED: " + e.dataTransfer.files[0].name;
+document.getElementById('drag-zone-vid').style.borderColor = "#b28dff";
+window.stagedFile = e.dataTransfer.files[0];
+}
+});
+};
+
+window.handleManualSelect = (input) => {
+if(input.files && input.files.length > 0) {
+window.stagedFile = input.files[0];
+document.getElementById('drop-text').innerText = "STAGED: " + window.stagedFile.name;
+document.getElementById('drag-zone').style.borderColor = "#40c4ff";
+document.getElementById('transmit-btn').style.display = 'block';
+}
+};
+
+window.handleVideoSelect = (input) => {
+if(input.files && input.files.length > 0) {
+window.stagedFile = input.files[0];
+document.getElementById('drop-text-vid').innerText = "VIDEO STAGED: " + window.stagedFile.name;
+document.getElementById('drag-zone-vid').style.borderColor = "#b28dff";
+document.getElementById('transmit-btn-vid').style.display = 'block';
+}
+}
+
+// --- UPDATED ART UPLOAD HANDLER ---
+window.handleArtUpload = async (input) => {
+if(input.files && input.files.length > 0) {
+// 1. Check Quota
+const allowed = await window.checkQuota();
+if(allowed) {
+window.startUpload(input.files[0], 'art_uploads');
+} else {
+input.value = '';
+}
+}
+};
+
+window.transmitData = () => {
+if(!window.stagedFile) return window.showToast("Select a file first.", "error");
+window.startUpload(window.stagedFile, 'verification');
+};
+
+window.transmitVideo = () => {
+const linkInput = document.getElementById('video-link-input');
+const linkVal = linkInput ? linkInput.value.trim() : "";
+
+if(linkVal.length > 5) {
+if(!linkVal.includes('http')) return window.showToast("Invalid URL. Must include http/https", "error");
+window.db.collection('users').doc(window.auth.currentUser.uid).set({
+artist_status: 'pending',
+artist_proof_url: linkVal
+}, { merge: true }).then(() => {
+window.currentUserDoc.artist_status = 'pending';
+window.showToast("Link Submitted!", "success");
+setTimeout(() => { window.switchDashTab('studio'); }, 1000);
+});
+return;
+}
+
+if(!window.stagedFile) return window.showToast("Please select a video or paste a link.", "error");
+window.startUpload(window.stagedFile, 'artist_proofs');
+};
+
+// --- CORE UPLOAD FUNCTION WITH FILE TYPE LIMITS ---
+window.startUpload = (file, folderName) => {
+
+// --- 1. DEFINE LIMITS ---
+let MAX_SIZE = 50 * 1024 * 1024; // Default 50MB
+let typeName = "File";
+
+// Artist Proof Video (500MB)
+if(folderName === 'artist_proofs') {
+MAX_SIZE = 500 * 1024 * 1024;
+typeName = "Proof Video";
+}
+// Portfolio Uploads (Variable)
+else if(folderName === 'art_uploads') {
+if(file.type.startsWith('audio/')) {
+MAX_SIZE = 20 * 1024 * 1024; // 20MB for Audio
+typeName = "Audio";
+} else if (file.type.startsWith('video/')) {
+MAX_SIZE = 200 * 1024 * 1024; // 200MB for Portfolio Video
+typeName = "Video";
+} else {
+MAX_SIZE = 20 * 1024 * 1024; // 20MB for Images
+typeName = "Image";
+}
+}
+
+// --- 2. CHECK LIMITS ---
+if(file.size > MAX_SIZE) {
+return window.showToast(`${typeName} too large. Max ${MAX_SIZE/(1024*1024)}MB.`, "error");
+}
+
+let statusId = 'upload-status-verify';
+let progId = 'prog-bar-verify';
+let containerId = 'prog-container-verify';
+
+if(folderName === 'art_uploads') { statusId = 'upload-status-art'; progId = 'prog-bar-art'; containerId = 'prog-container-art'; }
+if(folderName === 'artist_proofs') { statusId = 'upload-status-vid'; progId = 'prog-bar-vid'; containerId = 'prog-container-vid'; }
+
+const status = document.getElementById(statusId);
+const progContainer = document.getElementById(containerId);
+const progBar = document.getElementById(progId);
+
+if(document.getElementById('transmit-btn')) document.getElementById('transmit-btn').style.display = 'none';
+if(document.getElementById('transmit-btn-vid')) document.getElementById('transmit-btn-vid').style.display = 'none';
+
+if(status) status.innerText = "INITIALIZING UPLINK...";
+if(progContainer) { progContainer.style.display = "block"; progContainer.style.opacity = "1"; }
+if(progBar) progBar.style.width = "5%";
+
+const uid = window.auth.currentUser.uid;
+const handle = window.currentUserDoc.handle || "UnknownUser";
+const safeHandle = handle.replace(/[^a-zA-Z0-9]/g, "_");
+const newFileName = `${safeHandle}_${uid}_${file.name}`;
+
+const metadata = { customMetadata: { 'username': handle, 'uid': uid, 'original_name': file.name } };
+
+const uploadTask = window.storage.ref().child(`${folderName}/${uid}/${newFileName}`).put(file, metadata);
+
+uploadTask.on('state_changed',
+(snapshot) => {
+const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+if(progBar) progBar.style.width = progress + '%';
+if(status) status.innerText = "TRANSMITTING... " + Math.floor(progress) + "%";
+},
+(error) => {
+if(status) status.innerText = window.sanitizeError(error.message);
+if(progBar) progBar.style.backgroundColor = "#ff4444";
+window.showToast("Upload Failed.", "error");
+},
+() => {
+uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+if(status) status.innerText = "UPLOAD COMPLETE.";
+if(progBar) progBar.style.backgroundColor = "#0f0";
+
+if(folderName === 'verification') {
+status.innerText = "SAVING STATUS TO DATABASE...";
+window.db.collection('users').doc(uid).set({
+verification_status: 'pending',
+id_proof_url: downloadURL
+}, { merge: true })
+.then(() => {
+window.currentUserDoc.verification_status = 'pending';
+setTimeout(() => { window.switchDashTab('verify'); }, 1000);
+}).catch(err => {
+window.showToast("Database Error: " + err.message, "error");
+});
+}
+
+if(folderName === 'artist_proofs') {
+status.innerText = "SAVING STATUS TO DATABASE...";
+window.db.collection('users').doc(uid).set({
+artist_status: 'pending',
+artist_proof_url: downloadURL
+}, { merge: true })
+.then(() => {
+window.currentUserDoc.artist_status = 'pending';
+setTimeout(() => { window.switchDashTab('studio'); }, 1000);
+});
+}
+
+if(folderName === 'art_uploads') {
+window.db.collection('users').doc(uid).collection('uploads').add({
+url: downloadURL,
+name: newFileName,
+uploadedAt: new Date()
+});
+window.showToast("Artwork Uploaded Successfully.", "success");
+}
+});
+});
+};
+
+window.doLogout = () => {
+window.openDashboard('disconnect');
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+const profileIcon = document.querySelector('.profile-icon');
+if(profileIcon) {
+const newIcon = profileIcon.cloneNode(true);
+profileIcon.parentNode.replaceChild(newIcon, profileIcon);
+
+newIcon.addEventListener('click', async () => {
+if(window.auth.currentUser) {
+if(!window.currentUserDoc || !window.currentUserDoc.role) {
+try {
+const doc = await window.db.collection('users').doc(window.auth.currentUser.uid).get();
+if(doc.exists) window.currentUserDoc = doc.data();
+} catch(e) { console.error("Profile Fetch Error", e); }
+}
+
+const rect = newIcon.getBoundingClientRect();
+const dd = document.getElementById('user-dropdown');
+
+if(window.currentUserDoc && window.currentUserDoc.isAdmin) {
+if(!document.getElementById('admin-btn')) {
+const adminLink = document.createElement('a');
+adminLink.id = 'admin-btn';
+adminLink.innerText = "ADMIN TERMINAL";
+adminLink.style.color = "#ff4444";
+adminLink.style.borderBottom = "1px solid #333";
+adminLink.onclick = window.openAdminPanel;
+dd.insertBefore(adminLink, dd.firstChild);
+}
+}
+
+dd.style.left = (rect.right - 160) + 'px';
+dd.style.top = (rect.bottom + 15) + 'px';
+dd.style.position = 'fixed';
+dd.style.zIndex = "2147483647";
+dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+} else { window.openModal('login'); }
+});
+}
+
+window.addEventListener('click', (e) => {
+if(!e.target.closest('.profile-icon') && !e.target.closest('#user-dropdown')) {
+const dd = document.getElementById('user-dropdown');
+if(dd) dd.style.display='none';
+}
+});
+});
+</script>

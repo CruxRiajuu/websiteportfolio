@@ -1,0 +1,132 @@
+<style>
+/* Fonts by Crux Riajuu */
+@font-face {
+font-family: 'RampageBrush';
+src: url('https://dl.dropboxusercontent.com/scl/fi/sq59ngrh2k9icwcvo5jnu/RampageBrush.ttf?rlkey=r4vei1f19o508axvhggp41tcv') format('truetype');
+}
+
+@font-face {
+font-family: 'CruxComicHand';
+src: url('https://dl.dropboxusercontent.com/scl/fi/vhtsmighevbpd3jvg6vav/CruxComicHand.ttf?rlkey=l5dtu0bullyiij5fybiq1k03l') format('truetype');
+}
+
+@font-face {
+font-family: 'CruxHand-Regular';
+src: url('https://dl.dropboxusercontent.com/scl/fi/vvk7kbcbepq2hgzk9judp/CruxHand-Regular.ttf?rlkey=ex9d990k7b3fok5l1avz895f7') format('truetype');
+}
+
+@font-face {
+font-family: 'Authority-Distressed';
+src: url('https://dl.dropboxusercontent.com/scl/fi/myirxzgre5dzee4eg8hag/Authority-Distressed.ttf?rlkey=3lwpo71ybkbsrpijmws8uy7eo') format('truetype');
+}
+
+@font-face {
+font-family: 'Authority-DistressedItalic';
+src: url('https://dl.dropboxusercontent.com/scl/fi/6ettoih411zersng8oqpo/Authority-DistressedItalic.ttf?rlkey=gafzqv56ns7brgrzr2v2ais85') format('truetype');
+}
+
+@font-face {
+font-family: 'Authority-Italic';
+src: url('https://dl.dropboxusercontent.com/scl/fi/qbuffyxsyxdxnae9kyata/Authority-Italic.ttf?rlkey=s2ge4e19iu9q8udgjh0zov557') format('truetype');
+}
+
+@font-face {
+font-family: 'Authority-Regular';
+src: url('https://dl.dropboxusercontent.com/scl/fi/18xx22ll3pjxaqokzzmvl/Authority-Regular.ttf?rlkey=ililj9rlx27yjipfirr50jjjt') format('truetype');
+}
+
+@font-face {
+font-family: 'Authority-Rounded';
+src: url('https://dl.dropboxusercontent.com/scl/fi/dd0yvsrnmr723rwo8kqym/Authority-Rounded.ttf?rlkey=zyj24klgrhpx5d63utlir23dp') format('truetype');
+}
+
+@font-face {
+font-family: 'Authority-RoundedItalic';
+src: url('https://dl.dropboxusercontent.com/scl/fi/t9hwjsbepmo9uzy40drvh/Authority-RoundedItalic.ttf?rlkey=bs7jaaheoa14bgoxd4fgw32j8') format('truetype');
+}
+
+@font-face {
+font-family: 'Autom-Bold';
+src: url('https://dl.dropboxusercontent.com/scl/fi/6bbku5hm0qkhsd7ip8ttc/Autom-Bold.ttf?rlkey=zfud9kkjnobk0ou0xfo3e2bsc') format('truetype');
+}
+
+@font-face {
+font-family: 'Bebal-Bold';
+src: url('https://dl.dropboxusercontent.com/scl/fi/rmwk4k1bq61fyyvqwjg5s/Bebal-Bold.ttf?rlkey=tnb9h3n5sfwwstuqwouo344f1') format('truetype');
+}
+
+@font-face {
+font-family: 'Bison-Bold';
+src: url('https://dl.dropboxusercontent.com/scl/fi/v3jyvc9dc02chky6tal5i/Bison-Bold.ttf?rlkey=iz3fsbdbdnkgbmyx7xhsjtsiq') format('truetype');
+}
+
+@font-face {
+font-family: 'CyberSocial-Regular';
+src: url('https://dl.dropboxusercontent.com/scl/fi/di9hkcvazltxue0b50j63/CyberSocial-Regular.ttf?rlkey=cq7ha06do1qv4turs98ibd7a7') format('truetype');
+}
+
+@font-face {
+font-family: 'Excluded-z8XrX';
+src: url('https://dl.dropboxusercontent.com/scl/fi/vhspl676wqvl16jh3fr21/Excluded-z8XrX.ttf?rlkey=vgm0u4v391x2p61dky0itikto') format('truetype');
+}
+
+@font-face {
+font-family: 'Excludeditalic-jEr99';
+src: url('https://dl.dropboxusercontent.com/scl/fi/s4h50ckijp9njroozhzzf/Excludeditalic-jEr99.ttf?rlkey=7cezucbr046qvumjfea1ocxk9') format('truetype');
+}
+
+@font-face {
+font-family: 'Friza-Bold';
+src: url('https://dl.dropboxusercontent.com/scl/fi/8spbujm28taqz481y3l4l/Friza-Bold.ttf?rlkey=m7662nluta63epkvzrw34q2d2') format('truetype');
+}
+
+@font-face {
+font-family: 'Friza';
+src: url('https://dl.dropboxusercontent.com/scl/fi/13fxqt19crjn6rlkghtsu/Friza.ttf?rlkey=72nqnuharizc1euaeqn1ftkky') format('truetype');
+}
+
+@font-face {
+font-family: 'Genesys';
+src: url('https://dl.dropboxusercontent.com/scl/fi/v9rjvtn2h3bao36fj1qam/Genesys.ttf?rlkey=ro8woszupdxajgel5ikp4z8do') format('truetype');
+}
+
+@font-face {
+font-family: 'HaleyHand-Regular';
+src: url('https://dl.dropboxusercontent.com/scl/fi/06zm3x3uepxztk7oaj11t/HaleyHand-Regular.ttf?rlkey=uvvlhnly329ktqxl74luo263d') format('truetype');
+}
+
+@font-face {
+font-family: 'MangaMasterBB_ital';
+src: url('https://dl.dropboxusercontent.com/scl/fi/a22a4up2wd4qam4ozou9g/MangaMasterBB_ital.ttf?rlkey=anpmcxndfbr60bhw4nl0vxb59') format('truetype');
+}
+
+@font-face {
+font-family: 'MangaMasterBB_reg';
+src: url('https://dl.dropboxusercontent.com/scl/fi/h3ijs8uigxzd8ujke7r2v/MangaMasterBB_reg.ttf?rlkey=49dj6la2k8qg7qyyj7hllvlm2') format('truetype');
+}
+
+@font-face {
+font-family: 'MangaMasterBB-Bold';
+src: url('https://dl.dropboxusercontent.com/scl/fi/1vp8frb39r076h241mr2j/MangaMasterBB-Bold.ttf?rlkey=zg773hm1zg0zsq3dbvxxlozx9') format('truetype');
+}
+
+@font-face {
+font-family: 'MangaMasterBB-BoldItal';
+src: url('https://dl.dropboxusercontent.com/scl/fi/e6ljdfmjxxangimvjsx2c/MangaMasterBB-BoldItal.ttf?rlkey=086ds4l169tgpv69blnb9lta5') format('truetype');
+}
+@font-face {
+font-family: 'AdinaOutlined';
+src: url('https://dl.dropboxusercontent.com/scl/fi/4p96x6if1munu926nmviq/AdinaOutlined.ttf?rlkey=r4xdwazu9e5dctlzeotsnqdub') format('truetype');
+}
+
+@font-face {
+font-family: 'AdinaRegular';
+src: url('https://dl.dropboxusercontent.com/scl/fi/x9bmu7sborsohg919xni6/AdinaRegular.ttf?rlkey=r04u2rmyet9zs2ka2xwexmzqp') format('truetype');
+}
+
+@font-face {
+font-family: 'ZippyScratchHand-Regular';
+src: url('https://dl.dropboxusercontent.com/scl/fi/1g3e5vs17gs181wtfynrt/ZippyScratchHand-Regular.ttf?rlkey=349qxtkb006lregbbbhz2nnag') format('truetype');
+}
+
+</style>

@@ -1,0 +1,403 @@
+<style>
+
+/* --- Existing Font Imports --- */
+
+@import url('https://fonts.googleapis.com/css2?family=Abel&display=swap');
+
+/* --- Main navigation container (No changes) --- */
+
+#celestial-navigation {
+
+display: flex;
+
+flex-direction: column;
+
+position: relative;
+
+z-index: 100;
+
+}
+
+/* --- Individual navigation buttons (Spacing and Text Shadow) --- */
+
+.star-link {
+
+font-family: 'MangaMasterBB-BoldItal';
+
+/* Increased vertical margin for wider, even gaps */
+
+margin: 5px 0;
+
+text-align: center;
+
+color: #F6F6F6;
+
+text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.9);
+
+background-color: #1A1A24;
+
+cursor: pointer;
+
+padding: 10px;
+
+width: 100%;
+
+border: none;
+
+outline: none;
+
+/* Added font-size to transition for smooth text growth */
+
+transition: background-color 0.4s, color 0.4s, font-size 0.3s ease-in-out;
+
+border-radius: 0;
+
+font-size: 1.5rem;
+
+position: relative;
+
+display: flex;
+
+align-items: center;
+
+justify-content: center;
+
+overflow: visible;
+
+}
+
+/* Hover State - Text gets larger */
+
+.star-link:hover {
+
+background-color: #ddd;
+
+color: black;
+
+font-size: 1.6rem; /* Slightly larger text */
+
+}
+
+.star-link.nova-active {
+
+background-color: #32E5FF;
+
+color: #1A1A24;
+
+font-size: 1.5rem;
+
+}
+
+/* --- Left/Right Fading Marker Icons (Final Positioning) --- */
+
+.nav-marker-icon-left, .nav-marker-icon-right {
+
+opacity: 0;
+
+position: absolute;
+
+top: 50%;
+
+/* Base vertical alignment */
+
+transform: translateY(-70%);
+
+width: 25px;
+
+height: 25px;
+
+/* Added filter and transform to transition */
+
+transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out, filter 0.3s;
+
+pointer-events: none;
+
+z-index: 2;
+
+filter: drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.9));
+
+}
+
+/* Horizontal Positioning: Uses JS-calculated --text-width */
+
+.nav-marker-icon-left {
+
+left: calc(50% - (var(--text-width) / 2) - 12.5px - 35px);
+
+}
+
+.nav-marker-icon-right {
+
+right: calc(50% - (var(--text-width) / 2) - 12.5px - 35px);
+
+}
+
+/* FIX: Marker Icons on Hover - White Color, Breathing Animation Added */
+
+.star-link:hover .nav-marker-icon-left {
+
+opacity: 1;
+
+filter: invert(100%) drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.9));
+
+/* NEW FIX: Apply dedicated breathing animation for hover */
+
+animation: breathe-on-hover-left 1s infinite alternate ease-in-out;
+
+}
+
+.star-link:hover .nav-marker-icon-right {
+
+opacity: 1;
+
+filter: invert(100%) drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.9));
+
+/* NEW FIX: Apply dedicated breathing animation for hover */
+
+animation: breathe-on-hover-right 1s infinite alternate ease-in-out;
+
+}
+
+/* --- Styles for Active Button Icons (Blue/Breathing) --- */
+
+.star-link.nova-active .nav-marker-icon-left,
+
+.star-link.nova-active .nav-marker-icon-right {
+
+opacity: 1;
+
+/* Reverts to blue glow when active */
+
+filter: drop-shadow(0 0 5px #32E5FF) drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.9));
+
+}
+
+/* Apply different animations for INWARD/OUTWARD breathing (Active State) */
+
+.star-link.nova-active .nav-marker-icon-left {
+
+animation: breathe-in-out-left-final 1.5s infinite alternate ease-in-out;
+
+}
+
+.star-link.nova-active .nav-marker-icon-right {
+
+animation: breathe-in-out-right-final 1.5s infinite alternate ease-in-out;
+
+}
+
+/* Keyframe Animations */
+
+/* NEW: Keyframe for Hover Breathing (Outward movement) */
+
+@keyframes breathe-on-hover-left {
+
+0% { transform: translateY(-70%) translateX(0px); }
+
+100% { transform: translateY(-70%) translateX(-2px); } /* Moves 2px OUTWARD (left) */
+
+}
+
+@keyframes breathe-on-hover-right {
+
+0% { transform: translateY(-70%) translateX(0px); }
+
+100% { transform: translateY(-70%) translateX(2px); } /* Moves 2px OUTWARD (right) */
+
+}
+
+/* Keyframes for Active Breathing (Inward movement) */
+
+@keyframes breathe-in-out-left-final {
+
+0% { transform: translateY(-70%) translateX(0px); }
+
+50% { transform: translateY(-70%) translateX(3px); } /* Left icon moves 3px RIGHT (INWARD) */
+
+100% { transform: translateY(-70%) translateX(0px); }
+
+}
+
+@keyframes breathe-in-out-right-final {
+
+0% { transform: translateY(-70%) translateX(0px); }
+
+50% { transform: translateY(-70%) translateX(-3px); } /* Right icon moves 3px LEFT (INWARD) */
+
+100% { transform: translateY(-70%) translateX(0px); }
+
+}
+
+</style>
+
+<div id="celestial-navigation">
+
+<button class="star-link" data-target="digitalArt">
+
+<img class="nav-marker-icon-left" src="https://i.imgur.com/ar5wbxj.png" alt="Left Marker">
+
+Digital Art
+
+<img class="nav-marker-icon-right" src="https://i.imgur.com/uJguEWG.png" alt="Right Marker">
+
+</button>
+
+<button class="star-link" data-target="animation">
+
+<img class="nav-marker-icon-left" src="https://i.imgur.com/ar5wbxj.png" alt="Left Marker">
+
+Animation
+
+<img class="nav-marker-icon-right" src="https://i.imgur.com/uJguEWG.png" alt="Right Marker">
+
+</button>
+
+<button class="star-link" data-target="vtuber">
+
+<img class="nav-marker-icon-left" src="https://i.imgur.com/ar5wbxj.png" alt="Left Marker">
+
+V-Tuber Modeling
+
+<img class="nav-marker-icon-right" src="https://i.imgur.com/uJguEWG.png" alt="Right Marker">
+
+</button>
+
+<button class="star-link" data-target="videoEditing">
+
+<img class="nav-marker-icon-left" src="https://i.imgur.com/ar5wbxj.png" alt="Left Marker">
+
+Video Editing
+
+<img class="nav-marker-icon-right" src="https://i.imgur.com/uJguEWG.png" alt="Right Marker">
+
+</button>
+
+<button class="star-link" data-target="streamKit">
+
+<img class="nav-marker-icon-left" src="https://i.imgur.com/ar5wbxj.png" alt="Left Marker">
+
+Stream Kit
+
+<img class="nav-marker-icon-right" src="https://i.imgur.com/uJguEWG.png" alt="Right Marker">
+
+</button>
+
+<button class="star-link" data-target="logoDesign">
+
+<img class="nav-marker-icon-left" src="https://i.imgur.com/ar5wbxj.png" alt="Left Marker">
+
+Logo Design
+
+<img class="nav-marker-icon-right" src="https://i.imgur.com/uJguEWG.png" alt="Right Marker">
+
+</button>
+
+<button class="star-link" data-target="webDesign">
+
+<img class="nav-marker-icon-left" src="https://i.imgur.com/ar5wbxj.png" alt="Left Marker">
+
+Web Design
+
+<img class="nav-marker-icon-right" src="https://i.imgur.com/uJguEWG.png" alt="Right Marker">
+
+</button>
+
+</div>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+
+const starLinks = document.querySelectorAll('.star-link');
+
+const firstLink = starLinks[0];
+
+// --- Marker Icon Positioning Logic ---
+
+function updateMarkerPositions() {
+
+starLinks.forEach(link => {
+
+let textContent = '';
+
+link.childNodes.forEach(node => {
+
+if (node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0) {
+
+textContent += node.textContent.trim() + ' ';
+
+}
+
+});
+
+textContent = textContent.trim();
+
+if (textContent.length > 0) {
+
+const span = document.createElement('span');
+
+span.style.visibility = 'hidden';
+
+span.style.position = 'absolute';
+
+span.style.fontSize = getComputedStyle(link).fontSize;
+
+span.style.fontFamily = getComputedStyle(link).fontFamily;
+
+span.textContent = textContent;
+
+document.body.appendChild(span);
+
+const textWidth = span.offsetWidth;
+
+document.body.removeChild(span);
+
+link.style.setProperty('--text-width', `${textWidth}px`);
+
+}
+
+});
+
+}
+
+// --- Initial Setup and Events ---
+
+function sendMessage(target) {
+
+window.parent.postMessage({ starTarget: target }, '*');
+
+}
+
+starLinks.forEach(link => {
+
+link.addEventListener('click', function() {
+
+starLinks.forEach(otherLink => otherLink.classList.remove('nova-active'));
+
+this.classList.add('nova-active');
+
+const target = this.getAttribute('data-target');
+
+sendMessage(target);
+
+});
+
+});
+
+if (firstLink) {
+
+firstLink.classList.add('nova-active');
+
+const initialTarget = firstLink.getAttribute('data-target');
+
+sendMessage(initialTarget);
+
+}
+
+updateMarkerPositions();
+
+window.addEventListener('resize', updateMarkerPositions);
+
+});
+
+</script>

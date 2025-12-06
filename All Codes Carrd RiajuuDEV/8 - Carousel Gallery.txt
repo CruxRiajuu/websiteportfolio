@@ -1,0 +1,89 @@
+<div class="gallery-container">
+<div class="gallery-wrapper">
+<div class="frame-overlay"></div>
+<div id="photo-rotator"></div>
+<button onclick="rotatePrev()" class="photo-nav-btn prev-btn">&#10094;</button>
+<button onclick="rotateNext()" class="photo-nav-btn next-btn">&#10095;</button>
+<div id="lightbox-overlay" onclick="closeLightbox()">
+<div class="lightbox-content" onclick="event.stopPropagation()">
+<div id="lightbox-filmstrip"></div>
+</div>
+<div id="lightbox-thumbnails-container" onclick="event.stopPropagation()"></div>
+<button onclick="lightboxPrev(); event.stopPropagation();" class="lightbox-nav-btn lightbox-prev-btn">&#10094;</button>
+<button onclick="lightboxNext(); event.stopPropagation();" class="lightbox-nav-btn lightbox-next-btn">&#10095;</button>
+<button onclick="closeLightbox(); event.stopPropagation();" class="lightbox-close-btn">✕</button>
+</div>
+</div>
+</div>
+
+<style>
+/* Main container for responsiveness */
+.gallery-container { max-width: 800px; width: 95%; margin: 2em auto; }
+.gallery-wrapper { position: relative; width: 100%; aspect-ratio: 8 / 5; margin: auto; overflow: visible; }
+.frame-overlay { pointer-events: none; position: absolute; inset: 0; background-image: url('https://i.imgur.com/FN5nmjZ.png'); background-size: contain; background-repeat: no-repeat; background-position: center; z-index: 2; filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.5)); }
+#photo-rotator { position: relative; width: 100%; height: 100%; perspective: 1200px; z-index: 1; opacity: 0; transition: opacity 0.4s ease; }
+.photo-display { position: absolute; max-width: 79%; max-height: 86%; left: 50%; top: 50%; transform-origin: center; transition: transform 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 1.5s ease, filter 0.4s ease, box-shadow 0.4s ease; transform-style: preserve-3d; backface-visibility: hidden; opacity: 0; object-fit: contain; border-radius: 0px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); cursor: default; z-index: 1; will-change: transform, opacity; }
+.photo-display.center-focus { opacity: 1; cursor: pointer; z-index: 3; filter: none; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+.photo-display.center-focus:hover { transform: translate(-50%, -50%) translateZ(220px) scale(1.02); filter: drop-shadow(0 0 8px rgba(0, 31, 162, 0.8)); box-shadow: 0 15px 40px rgba(0,0,0,0.7); }
+.photo-nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: none; color: white; font-size: 2.5em; border: none; cursor: pointer; z-index: 10; filter: drop-shadow(2px 2px 8px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 10px rgba(0, 31, 162, 0.6)); transition: all 0.3s ease; will-change: transform, filter; }
+.photo-nav-btn.prev-btn { left: -40px; }
+.photo-nav-btn.next-btn { right: -40px; }
+.photo-nav-btn:hover { filter: drop-shadow(2px 2px 8px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 15px rgba(0, 31, 162, 0.9)) !important; transform: translateY(-50%) scale(1.1) !important; }
+
+/* Lightbox Styles */
+#lightbox-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2147483647; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.lightbox-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; height: 85%; max-width: 1400px; overflow: hidden; }
+#lightbox-filmstrip { height: 100%; display: flex; transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
+.lightbox-image-wrapper { width: 100%; height: 100%; flex-shrink: 0; display: flex; justify-content: center; align-items: center; }
+.lightbox-image-wrapper img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+
+/* ✨ MODIFIED CSS: Increased z-index to guarantee buttons are visible */
+.lightbox-nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: none; color: white; font-size: 3em; border: none; cursor: pointer; filter: drop-shadow(2px 2px 8px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 12px rgba(0, 31, 162, 0.7)); transition: all 0.3s ease; will-change: transform, filter; padding: 20px; z-index: 99; }
+.lightbox-nav-btn.lightbox-prev-btn { left: 5%; }
+.lightbox-nav-btn.lightbox-next-btn { right: 5%; }
+.lightbox-close-btn { position: absolute; background: none; color: white; font-size: 2em; border: none; cursor: pointer; filter: drop-shadow(2px 2px 8px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 10px rgba(0, 31, 162, 0.6)); transition: all 0.3s ease; top: 4%; right: 4%; padding: 20px; z-index: 99; }
+
+.lightbox-nav-btn:hover, .lightbox-close-btn:hover { filter: drop-shadow(2px 2px 8px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 15px rgba(0, 31, 162, 0.9)) !important; transform: translateY(-50%) scale(1.1) !important; }
+.lightbox-close-btn:hover { transform: scale(1.1) !important; }
+#lightbox-thumbnails-container { position: absolute; bottom: 5%; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; padding: 10px; background: rgba(0,0,0,0.25); border-radius: 10px; max-width: 90%; }
+.lightbox-thumb { width: 70px; height: 50px; object-fit: cover; cursor: pointer; border: 2px solid transparent; border-radius: 4px; transition: all 0.3s ease; opacity: 0.6; }
+.lightbox-thumb:hover { opacity: 1; transform: scale(1.05); }
+.lightbox-thumb.active { border-color: #ffffff; opacity: 1; transform: scale(1.05); }
+@media (max-width: 768px) { .photo-nav-btn.prev-btn { left: 5px; } .photo-nav-btn.next-btn { right: 5px; } .lightbox-nav-btn { font-size: 2.5em; } .lightbox-nav-btn.lightbox-prev-btn { left: 0; } .lightbox-nav-btn.lightbox-next-btn { right: 0; } .lightbox-close-btn { top: 0; right: 0; } #lightbox-thumbnails-container { overflow-x: auto; justify-content: flex-start; } }
+</style>
+
+<script>
+const rotatorImages = [
+"https://i.imgur.com/K59fz6W.jpg",
+"https://i.imgur.com/PSvIweG.jpg",
+"https://i.imgur.com/YyfAQwZ.jpg",
+"https://i.imgur.com/83pW10Q.jpeg",
+"https://i.imgur.com/1SaK8Ye.png"
+];
+
+let rotatorIndex = 0;
+let images = [];
+let touchStartX = 0;
+let touchEndX = 0;
+let isFirstBuild = true;
+
+function getDynamicPositions() { const rotator = document.getElementById("photo-rotator"); if (!rotator) return []; const rotatorWidth = rotator.offsetWidth; const isMobile = window.innerWidth <= 768; const xOffset = isMobile ? rotatorWidth * 0.35 : rotatorWidth * 0.35; const zOffsetCenter = isMobile ? 100 : 200; const zOffsetSide = isMobile ? -25 : -50; const scaleSide = isMobile ? 0.65 : 0.7; const rotation = isMobile ? -40 : -45; return [ { transform: `translate(-50%, -50%) translateZ(${zOffsetCenter}px) scale(1)`, opacity: 1, zIndex: 3, cursor: "pointer" }, { transform: `translate(-50%, -50%) rotateY(${rotation}deg) translateX(${xOffset}px) translateZ(${zOffsetSide}px) scale(${scaleSide})`, opacity: 0.4, zIndex: 2, cursor: "default" }, { transform: `translate(-50%, -50%) rotateY(${-rotation}deg) translateX(-${xOffset}px) translateZ(${zOffsetSide}px) scale(${scaleSide})`, opacity: 0.4, zIndex: 2, cursor: "default" } ]; }
+function buildRotator() { const container = document.getElementById("photo-rotator"); if (!container) return; if (images.length === 0) { rotatorImages.forEach((src, i) => { const img = document.createElement("img"); img.src = src; img.className = "photo-display"; img.alt = `Gallery image ${i + 1}`; img.onclick = () => { if (i === rotatorIndex) openLightbox(); }; container.appendChild(img); images.push(img); }); } if (isFirstBuild) { images.forEach(img => img.style.transition = 'none'); } const positions = getDynamicPositions(); images.forEach((img, i) => { let posIndex = (i - rotatorIndex + rotatorImages.length) % rotatorImages.length; if (posIndex === 0) { Object.assign(img.style, positions[0]); img.classList.add("center-focus"); } else if (posIndex === 1) { Object.assign(img.style, positions[1]); img.classList.remove("center-focus"); } else if (posIndex === rotatorImages.length - 1) { Object.assign(img.style, positions[2]); img.classList.remove("center-focus"); } else { img.style.opacity = 0; img.style.zIndex = 0; img.style.cursor = "default"; img.style.transform = "translate(-50%, -50%) scale(0)"; img.classList.remove("center-focus"); } }); if (isFirstBuild) { void container.offsetWidth; images.forEach(img => img.style.transition = ''); isFirstBuild = false; } container.style.opacity = 1; }
+function rotateNext() { rotatorIndex = (rotatorIndex + 1) % rotatorImages.length; buildRotator(); }
+function rotatePrev() { rotatorIndex = (rotatorIndex - 1 + rotatorImages.length) % rotatorImages.length; buildRotator(); }
+function openLightbox() { const overlay = document.getElementById("lightbox-overlay"); overlay.style.display = "block"; document.body.style.overflow = "hidden"; populateLightboxContent(); updateLightboxPosition(false); overlay.addEventListener('touchstart', handleTouchStart, { passive: true }); overlay.addEventListener('touchend', handleTouchEnd, { passive: true }); }
+function closeLightbox() { const overlay = document.getElementById("lightbox-overlay"); overlay.style.display = "none"; document.body.style.overflow = "auto"; overlay.removeEventListener('touchstart', handleTouchStart); overlay.removeEventListener('touchend', handleTouchEnd); }
+function lightboxNext() { rotatorIndex = (rotatorIndex + 1) % rotatorImages.length; updateLightboxPosition(true); buildRotator(); }
+function lightboxPrev() { rotatorIndex = (rotatorIndex - 1 + rotatorImages.length) % rotatorImages.length; updateLightboxPosition(true); buildRotator(); }
+function updateLightboxPosition(withAnimation = true) { const filmstrip = document.getElementById('lightbox-filmstrip'); const newTransform = `translateX(-${rotatorIndex * 100}%)`; filmstrip.style.transition = withAnimation ? '' : 'none'; filmstrip.style.transform = newTransform; const thumbnails = document.querySelectorAll(".lightbox-thumb"); thumbnails.forEach((thumb, i) => { if (i === rotatorIndex) { thumb.classList.add("active"); thumb.scrollIntoView({ behavior: 'smooth', inline: 'center' }); } else { thumb.classList.remove("active"); } }); }
+function populateLightboxContent() { const filmstrip = document.getElementById("lightbox-filmstrip"); const thumbContainer = document.getElementById("lightbox-thumbnails-container"); filmstrip.innerHTML = ""; thumbContainer.innerHTML = ""; rotatorImages.forEach((src, i) => { const wrapper = document.createElement("div"); wrapper.className = "lightbox-image-wrapper"; const img = document.createElement("img"); img.src = src; img.alt = `Lightbox image ${i + 1}`; wrapper.appendChild(img); filmstrip.appendChild(wrapper); const thumb = document.createElement("img"); thumb.src = src; thumb.className = "lightbox-thumb"; thumb.alt = `Thumbnail ${i + 1}`; thumb.onclick = () => { rotatorIndex = i; updateLightboxPosition(true); buildRotator(); }; thumbContainer.appendChild(thumb); }); }
+function handleTouchStart(e) { touchStartX = e.changedTouches[0].screenX; }
+function handleTouchEnd(e) { touchEndX = e.changedTouches[0].screenX; handleSwipeGesture(); }
+function handleSwipeGesture() { const swipeThreshold = 50; if (touchEndX < touchStartX - swipeThreshold) { lightboxNext(); } else if (touchEndX > touchStartX + swipeThreshold) { lightboxPrev(); } }
+
+/* ✨ MODIFIED SCRIPT: Removed the old click listener, as it's now handled by onclick in the HTML. */
+document.addEventListener('keydown', function(e) { const lightbox = document.getElementById("lightbox-overlay"); if (lightbox.style.display === "block") { if (e.key === 'Escape') closeLightbox(); else if (e.key === 'ArrowLeft') lightboxPrev(); else if (e.key === 'ArrowRight') lightboxNext(); } });
+
+window.addEventListener('resize', buildRotator);
+document.addEventListener('DOMContentLoaded', buildRotator);
+</script>

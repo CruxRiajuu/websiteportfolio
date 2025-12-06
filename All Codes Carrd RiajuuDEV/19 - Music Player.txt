@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abel&display=swap">
+<style>
+body {
+background-color: #1a1a1a;
+min-height: 100vh;
+}
+#musicplaylist {
+display: none;
+}
+#musicplayer {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+margin: 0 auto;
+box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+width: 300px;
+height: 65px;
+overflow: hidden;
+position: relative;
+}
+#highlightBox {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 50px;
+background: rgba(0,0,0,0.5);
+z-index: -1;
+}
+#musictitle-container {
+width: 100%;
+height: 100%;
+overflow: hidden;
+position: relative;
+padding: 10px;
+border-radius: 5px;
+display: flex;
+flex-direction: column;
+justify-content: space-between;
+align-items: center;
+}
+#musictitle {
+display: none;
+color: #31E5FF;
+font-family: 'CruxHand-Regular', 'Abel', sans-serif;
+white-space: nowrap;
+position: absolute;
+top: -5px;
+font-size: 26px;
+width: 100%;
+}
+.marquee {
+display: inline-block;
+white-space: nowrap;
+width: max-content;
+line-height: 1.5;
+}
+#musiccontrols {
+display: flex;
+justify-content: center;
+align-items: flex-end;
+margin-top: 20px;
+}
+.speaker, .playpause, .next, .prev, .fastforward, .rewind, .random {
+cursor: pointer;
+background: linear-gradient(to bottom, #011f2a, #01131a, #000000);
+color: #fff;
+border: none;
+border-radius: 5px;
+padding: 4px;
+font-size: 16px;
+margin-bottom: 3px;
+margin-left: 1px;
+margin-right: 1px;
+position: relative;
+transition: transform 0.2s ease;
+box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+.speaker i, .playpause i, .next i, .prev i, .fastforward i, .rewind i, .random i {
+font-size: 14px;
+transition: color 0.3s ease, text-shadow 0.3s ease, transform 0.3s ease;
+text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+.speaker:hover i, .playpause:hover i, .next:hover i, .prev:hover i, .fastforward:hover i, .rewind:hover i, .random:hover i {
+color: #00b9e5;
+text-shadow: 0 0 10px #00b9e5;
+transform: scale(1.1);
+}
+.speaker:active, .playpause:active, .next:active, .prev:active, .fastforward:active, .rewind:active, .random:active {
+transform: scale(0.95);
+box-shadow: 0 1px 2px rgba(0, 0, 0, 0.7) inset;
+}
+.volume-container {
+display: none;
+}
+
+.custom-tooltip {
+display: none;
+position: fixed;
+background: rgba(0,0,0,0.9);
+backdrop-filter: blur(8px);
+border: 1px solid #00b9e5;
+color: #fff;
+font-family: 'Abel', sans-serif;
+font-size: 12px;
+padding: 2px 4px;
+border-radius: 3px;
+white-space: nowrap;
+z-index: 9999;
+transition: opacity 0.3s ease;
+opacity: 0;
+pointer-events: none;
+}
+
+@keyframes scrollText {
+0% { transform: translateX(calc(100% + 10px)); }
+100% { transform: translateX(calc(-100% - 10px)); }
+}
+
+/* --- MOBILE FIX: Disable Tooltips on Touch Devices --- */
+@media (hover: none) {
+.custom-tooltip { display: none !important; }
+}
+</style>
+</head>
+<body>
+<div id="musicplayer">
+<div id="highlightBox"></div>
+<div id="musictitle-container">
+<div id="musictitle"><span class="marquee" id="currentSongTitle"></span></div>
+<div id="musiccontrols">
+<button class="rewind" data-tooltip="Skim Backward (0.5s)"><i class="fas fa-angle-double-left"></i></button>
+<button class="prev" data-tooltip="Previous Track"><i class="fas fa-backward"></i></button>
+<button class="playpause" data-tooltip="Play/Pause Track"><i class="fas fa-play"></i></button>
+<button class="next" data-tooltip="Next Track"><i class="fas fa-forward"></i></button>
+<button class="fastforward" data-tooltip="Skim Forward (0.5s)"><i class="fas fa-angle-double-right"></i></button>
+<button class="random" data-tooltip="Toggle Random/Sequential Playlist"><i class="fas fa-random"></i></button>
+<button class="speaker" data-tooltip="Mute/Unmute Audio"><i class="fas fa-volume-up"></i></button>
+</div>
+</div>
+<audio id="musicsrc">
+<source src="https://dl.dropboxusercontent.com/scl/fi/r00ecru60czwms75519dr/Skeleton-Punchers.wav?rlkey=506p7uxpq9fcxojfddgixgjq0&st=l1e00654" type="audio/wav">
+</audio>
+<div id="musicplaylist"></div>
+</div>
+
+<div id="dynamicTooltip" class="custom-tooltip"></div>
+
+<script>
+// --- JavaScript Functions for Dynamic Scrolling ---
+function calculateMarqueeDuration(titleElement) {
+const textWidth = titleElement.offsetWidth;
+const containerWidth = document.querySelector('#musictitle-container').offsetWidth;
+const totalDistance = textWidth + containerWidth;
+const scrollSpeed = 40;
+const duration = totalDistance / scrollSpeed;
+return Math.max(duration, 5);
+}
+
+function resetMarquee(titleEl) {
+titleEl.style.animation = 'none';
+titleEl.offsetWidth;
+titleEl.style.animation = `scrollText ${calculateMarqueeDuration(titleEl)}s linear infinite`;
+titleEl.style.animationPlayState = 'running';
+}
+// --- End Dynamic Scrolling Functions ---
+
+let playlist = [
+{ title: "Skeleton Punchers - This is a very long song title to properly test the scrolling functionality.", url: "https://dl.dropboxusercontent.com/scl/fi/r00ecru60czwms75519dr/Skeleton-Punchers.wav?rlkey=506p7uxpq9fcxojfddgixgjq0&st=l1e00654" }
+];
+let currentSongIndex = 0;
+let skimInterval = null;
+let isRandom = true;
+
+const audio = document.querySelector('#musicsrc');
+const playBtn = document.querySelector('#musicplayer .playpause');
+const titleEl = document.querySelector('#currentSongTitle');
+const titleContainer = document.querySelector('#musictitle');
+const tooltipElement = document.getElementById('dynamicTooltip');
+let tooltipTimeout;
+
+function showTooltip(button, text) {
+clearTimeout(tooltipTimeout);
+
+const rect = button.getBoundingClientRect();
+tooltipElement.innerText = text;
+
+tooltipElement.style.left = `${rect.left + rect.width / 2}px`;
+tooltipElement.style.top = `${rect.bottom + 5}px`;
+
+tooltipElement.style.transform = `translateX(-50%)`;
+
+tooltipElement.style.display = 'block';
+tooltipElement.style.opacity = '1';
+}
+
+function hideTooltip() {
+tooltipElement.style.opacity = '0';
+
+tooltipTimeout = setTimeout(() => {
+if (tooltipElement.style.opacity === '0') {
+tooltipElement.style.display = 'none';
+}
+}, 300);
+}
+
+window.onload = async function() {
+const nextBtn = document.querySelector('#musicplayer .next');
+const prevBtn = document.querySelector('#musicplayer .prev');
+const fastforwardBtn = document.querySelector('#musicplayer .fastforward');
+const rewindBtn = document.querySelector('#musicplayer .rewind');
+const randomBtn = document.querySelector('#musicplayer .random');
+const speakerBtn = document.querySelector('#musicplayer .speaker');
+
+if (!audio || !playBtn || !nextBtn || !prevBtn || !fastforwardBtn || !rewindBtn || !randomBtn || !speakerBtn || !titleEl || !titleContainer) {
+titleEl.innerText = 'Player initialization failed';
+return;
+}
+
+try {
+const response = await fetch('https://raw.githubusercontent.com/CruxRiajuu/carrd-assets/main/playlist.json');
+if (response.ok) {
+playlist = await response.json();
+currentSongIndex = Math.floor(Math.random() * playlist.length);
+}
+} catch (e) {
+console.error('Failed to fetch playlist:', e);
+}
+
+audio.src = playlist[currentSongIndex].url;
+titleEl.innerText = playlist[currentSongIndex].title;
+audio.volume = 1.0;
+
+document.querySelectorAll('#musiccontrols button').forEach(button => {
+button.addEventListener('mouseenter', () => {
+showTooltip(button, button.dataset.tooltip);
+});
+button.addEventListener('mouseleave', hideTooltip);
+});
+
+playBtn.addEventListener('click', () => playpause());
+nextBtn.addEventListener('click', () => playNext());
+prevBtn.addEventListener('click', () => playPrev());
+fastforwardBtn.addEventListener('pointerdown', startFastForward);
+fastforwardBtn.addEventListener('pointerup', stopSkim);
+fastforwardBtn.addEventListener('pointerleave', stopSkim);
+rewindBtn.addEventListener('pointerdown', startRewind);
+rewindBtn.addEventListener('pointerup', stopSkim);
+rewindBtn.addEventListener('pointerleave', stopSkim);
+randomBtn.addEventListener('click', toggleRandom);
+speakerBtn.addEventListener('click', () => toggleMute());
+
+audio.addEventListener('ended', () => playNext());
+
+/* MARQUEE START/STOP */
+audio.addEventListener('pause', () => {
+playBtn.innerHTML = '<i class="fas fa-play"></i>';
+titleEl.style.animationPlayState = 'paused';
+});
+audio.addEventListener('play', () => {
+titleContainer.style.display = 'block';
+playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+titleEl.style.animation = `scrollText ${calculateMarqueeDuration(titleEl)}s linear infinite`;
+titleEl.style.animationPlayState = 'running';
+});
+};
+
+function playpause() {
+if (audio.paused || audio.ended) {
+audio.play().catch(e => {
+playBtn.innerHTML = '<i class="fas fa-play"></i>';
+});
+titleContainer.style.display = 'block';
+
+if (titleEl.style.animation === 'none' || titleEl.style.animation === '') {
+titleEl.style.animation = `scrollText ${calculateMarqueeDuration(titleEl)}s linear infinite`;
+}
+titleEl.style.animationPlayState = 'running';
+titleEl.innerText = playlist[currentSongIndex].title;
+} else {
+audio.pause();
+}
+}
+
+function playNext() {
+if (playlist.length === 0) return;
+if (isRandom) {
+currentSongIndex = Math.floor(Math.random() * playlist.length);
+} else {
+currentSongIndex = (currentSongIndex + 1) % playlist.length;
+}
+audio.src = playlist[currentSongIndex].url;
+titleEl.innerText = playlist[currentSongIndex].title;
+
+resetMarquee(titleEl);
+
+audio.play().catch(e => {
+titleEl.innerText = 'Error: ' + playlist[currentSongIndex].title;
+});
+titleContainer.style.display = 'block';
+}
+
+function playPrev() {
+if (playlist.length === 0) return;
+if (isRandom) {
+currentSongIndex = Math.floor(Math.random() * playlist.length);
+} else {
+currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
+}
+audio.src = playlist[currentSongIndex].url;
+titleEl.innerText = playlist[currentSongIndex].title;
+
+resetMarquee(titleEl);
+
+audio.play().catch(e => {
+titleEl.innerText = 'Error: ' + playlist[currentSongIndex].title;
+});
+titleContainer.style.display = 'block';
+}
+
+function startFastForward() {
+if (!audio || audio.paused) return;
+stopSkim();
+skimInterval = setInterval(() => {
+audio.currentTime = Math.min(audio.currentTime + 0.5, audio.duration);
+}, 100);
+}
+
+function startRewind() {
+if (!audio || audio.paused) return;
+stopSkim();
+skimInterval = setInterval(() => {
+audio.currentTime = Math.max(audio.currentTime - 0.5, 0);
+}, 100);
+}
+
+function stopSkim() {
+if (skimInterval) {
+clearInterval(skimInterval);
+skimInterval = null;
+}
+}
+
+function toggleRandom() {
+const randomBtn = document.querySelector('#musicplayer .random');
+if (!randomBtn) return;
+isRandom = !isRandom;
+randomBtn.innerHTML = isRandom ? '<i class="fas fa-random"></i>' : '<i class="fas fa-list"></i>';
+}
+
+function toggleMute() {
+const speakerIcon = document.querySelector('#musicplayer .speaker i');
+if (!audio || !speakerIcon) return;
+audio.muted = !audio.muted;
+speakerIcon.className = audio.muted ? 'fas fa-volume-mute' : 'fas fa-volume-up';
+}
+</script>
+</body>
+</html>

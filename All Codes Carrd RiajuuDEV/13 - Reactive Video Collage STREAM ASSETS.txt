@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asset Gallery</title>
+<link href="https://fonts.googleapis.com/css2?family=Abel&display=swap" rel="stylesheet">
+<style>
+body {
+background-color: #1a1a1a;
+margin: 0;
+font-family: 'Abel', sans-serif;
+}
+
+/* Renamed from .video-gallery */
+.asset-gallery {
+display: flex;
+flex-wrap: wrap;
+justify-content: center;
+gap: 20px;
+padding: 20px;
+margin-top: 100px;
+}
+
+/* Renamed from .video-item */
+.asset-card {
+background-color: #2b2b2b;
+border-radius: 4px;
+overflow: hidden;
+box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+display: flex;
+flex-direction: column;
+flex: 0 1 320px;
+transition: all 0.4s ease-in-out;
+}
+
+@media (min-width: 769px) {
+.asset-gallery {
+margin-top: 0;
+}
+.asset-card {
+cursor: pointer;
+}
+
+/* Hover effect for tablet and PC */
+.asset-card:hover {
+transform: scale(1.05); /* Slightly enlarges the item */
+box-shadow: 0 8px 25px rgba(0, 255, 255, 0.3); /* Adds a glow */
+z-index: 10;
+}
+}
+
+/* Renamed from .video-embed */
+.asset-preview {
+width: 100%;
+border: none;
+display: block;
+aspect-ratio: 16 / 9;
+}
+
+/* Renamed from .video-description */
+.asset-info {
+padding: 10px 15px;
+text-align: center;
+}
+
+.asset-info p {
+margin: 4px 0;
+}
+
+/* Renamed from .video-title */
+.asset-title {
+font-family: 'Abel';
+color: #32E5FF;
+text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+font-size: 20px;
+font-style: italic;
+}
+
+/* Renamed from .video-subtitle */
+.asset-subtitle {
+font-family: 'Abel';
+color: #ECECEC;
+text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+font-size: 15px;
+}
+</style>
+</head>
+<body>
+
+<div class="asset-gallery">
+
+<div class="asset-card">
+<iframe class="asset-preview" src="https://drive.google.com/file/d/15I6F41TfZmHGd2l9Y74qEiptmBFMlQnl/preview" allowfullscreen></iframe>
+<div class="asset-info">
+<p class="asset-title">Cyberpunk 2077 Themed Green Screen</p>
+<p class="asset-subtitle">Male V - Stinger (Waiting)</p>
+</div>
+</div>
+
+<div class="asset-card">
+<iframe class="asset-preview" src="https://drive.google.com/file/d/1BDEKs4UGdZ03tjK7WY_42POSvz_pCd7s/preview" allowfullscreen></iframe>
+<div class="asset-info">
+<p class="asset-title">Cyberpunk 2077 Themed Orange Screen</p>
+<p class="asset-subtitle">Female V - Stinger (Waiting)</p>
+</div>
+</div>
+
+<div class="asset-card">
+<iframe class="asset-preview" src="https://drive.google.com/file/d/1pSIqZDec3Gr5vLb2iFXVa37lphK1YOdu/preview" allowfullscreen></iframe>
+<div class="asset-info">
+<p class="asset-title">Cyberpunk 2077 Themed</p>
+<p class="asset-subtitle">Stream Offline</p>
+</div>
+</div>
+
+<div class="asset-card">
+<iframe class="asset-preview" src="https://drive.google.com/file/d/1iUI5EbqI4Kjy5Ah8cCndZX4pg5cTnZko/preview" allowfullscreen></iframe>
+<div class="asset-info">
+<p class="asset-title">Cyberpunk 2077 Themed</p>
+<p class="asset-subtitle">Stinger Slider Transition</p>
+</div>
+</div>
+
+</div>
+
+</body>
+</html>

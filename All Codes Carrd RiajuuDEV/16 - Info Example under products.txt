@@ -1,0 +1,34 @@
+<div style="display: flex; justify-content: center; align-items: center; text-align: center; gap: 100px; flex-wrap: wrap;">
+<!-- Left side -->
+<div style="flex: 0 1 auto; min-width: 150px;">
+<p style="margin: 0; font-family: 'Abel'; color: #32E5FF; text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5); font-size: 16px;">
+<em><strong>DESCRIPTION</strong></em>
+</p>
+<p style="margin: 0; font-family: 'Abel'; color: #F6F6F6; text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5); font-size: 16px;">
+<strong>Messy artwork for character conceptualization. Great for those on a budget.</strong>
+</p>
+<p style="margin: 0; font-family: 'Abel'; color: #32E5FF; text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5); font-size: 12px;">
+<em>Charged per character.</em>
+Increase <strong>Quantity</strong> to add more characters.
+</p>
+</div>
+
+<!-- Right side -->
+<div style="flex: 0 1 auto; min-width: 150px;">
+<p style="font-family: 'Abel'; color: #F6F6F6; text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5); font-size: 16px;">
+<strong>Please specify your purchase</strong><br>
+State your purchase in the message box.<br>
+I'll respond to confirm. Thank you!
+</p>
+</div>
+</div>
+
+<!-- Optional media query for extra-small screens -->
+<style>
+@media (max-width: 500px) {
+div[style*="display: flex"] {
+flex-direction: column;
+text-align: center;
+}
+}
+</style>

@@ -1,0 +1,128 @@
+<style>
+
+#nova-content-display {
+
+width: 100%;
+
+display: flex;
+
+justify-content: center;
+
+align-items: center;
+
+overflow: hidden;
+
+transition: height 0.35s ease-in-out;
+
+}
+
+#nova-content-display iframe {
+
+width: 1200px;
+
+height: 100%;
+
+border: none;
+
+}
+
+</style>
+
+<div id="nova-content-display"></div>
+
+<script>
+
+const contentContainer = document.getElementById("nova-content-display");
+
+function updateContent(targetId) {
+
+let iframeSrc = '';
+
+let contentHeight = '560px';
+
+switch(targetId) {
+
+case 'digitalArt':
+
+iframeSrc = 'https://crprices.carrd.co/#pdigitalart';
+
+contentHeight = '560px';
+
+break;
+
+case 'animation':
+
+iframeSrc = 'https://crprices.carrd.co/#panimation';
+
+contentHeight = '520px';
+
+break;
+
+case 'vtuber':
+
+iframeSrc = 'https://crprices.carrd.co/#pvtuber';
+
+contentHeight = '420px';
+
+break;
+
+case 'videoEditing':
+
+iframeSrc = 'https://crprices.carrd.co/#pve';
+
+contentHeight = '460px';
+
+break;
+
+case 'streamKit':
+
+iframeSrc = 'https://crprices.carrd.co/#pstreamkit';
+
+contentHeight = '450px';
+
+break;
+
+case 'logoDesign':
+
+iframeSrc = 'https://crprices.carrd.co/#pld';
+
+contentHeight = '420px';
+
+break;
+
+case 'webDesign':
+iframeSrc = 'https://crprices.carrd.co/#pwsd';
+contentHeight = '440px';
+break;
+
+}
+
+if (iframeSrc) {
+
+contentContainer.style.height = contentHeight;
+
+// --- The ONLY change is adding scrolling="no" to the iframe tag below ---
+
+contentContainer.innerHTML = `<iframe title="${targetId}-frame" src="${iframeSrc}" scrolling="no"></iframe>`;
+
+}
+
+}
+
+window.addEventListener("message", function (event) {
+
+if (event.data && event.data.starTarget) {
+
+updateContent(event.data.starTarget);
+
+}
+
+});
+
+window.addEventListener('DOMContentLoaded', (event) => {
+
+updateContent('digitalArt');
+
+});
+
+</script>

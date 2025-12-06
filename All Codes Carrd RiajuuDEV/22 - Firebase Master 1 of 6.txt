@@ -1,0 +1,214 @@
+<style>
+/* --- 1. VARIABLES --- */
+:root { --c-accent: #40c4ff; --c-err: #ff4444; --c-bg: #121212; --c-surface: #1e1e1e; --font-stack: 'Myriad Pro', sans-serif; }
+
+/* --- 2. Z-INDEX SUPREMACY --- */
+#firebase-modal-overlay, .firebase-modal, #dashboard-ui, #user-dropdown, #cyber-toast-container {
+z-index: 2147483647 !important;
+}
+
+/* --- 3. MODAL BASE --- */
+#firebase-modal-overlay {
+position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(10px); display: none;
+}
+
+.firebase-modal {
+position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+background: linear-gradient(145deg, #1e1e1e, #121212);
+border: 1px solid #333; border-left: 2px solid var(--c-accent); border-right: 2px solid var(--c-accent);
+padding: 40px; width: 90%; max-width: 420px; display: none; font-family: var(--font-stack);
+box-shadow: 0 20px 80px rgba(0,0,0,0.9); border-radius: 6px; overflow: hidden;
+}
+
+/* LED STRIP */
+@keyframes beam-pulse { 0% { opacity: 0.5; filter: drop-shadow(0 0 5px var(--c-accent)); } 50% { opacity: 1; filter: drop-shadow(0 0 20px var(--c-accent)); } 100% { opacity: 0.5; filter: drop-shadow(0 0 5px var(--c-accent)); } }
+.modal-led-strip { height: 2px; width: 100%; position: absolute; top: 0; left: 0; display: flex; justify-content: center; }
+.led-L, .led-R { position: absolute; top: 0; bottom: 0; width: 55%; animation: beam-pulse 2s infinite ease-in-out; }
+.led-L { right: 50%; background: linear-gradient(to left, var(--c-accent) 0%, var(--c-accent) 20%, transparent 100%); }
+.led-R { left: 50%; background: linear-gradient(to right, var(--c-accent) 0%, var(--c-accent) 20%, transparent 100%); }
+
+/* --- 4. UI ELEMENTS --- */
+.firebase-modal h3 { color: #fff; margin: 0 0 10px; text-transform: uppercase; letter-spacing: 2px; font-size: 1.6rem; text-align: center; text-shadow: 0 0 15px rgba(64,196,255,0.4); }
+
+.firebase-modal p { color: #ccc; text-align: center; font-size: 0.9rem; margin-bottom: 20px; line-height: 1.4; }
+
+.firebase-modal input[type="email"],
+.firebase-modal input[type="password"],
+.firebase-modal input[type="text"],
+.firebase-modal select {
+width: 100%; padding: 14px; margin-bottom: 12px; border: 1px solid #333;
+background: #0a0a0a; color: #fff; font-family: monospace; font-size: 13px;
+outline: none; border-radius: 4px;
+}
+.firebase-modal input:focus, .firebase-modal select:focus { border-color: var(--c-accent); box-shadow: 0 0 15px rgba(64,196,255,0.2); }
+
+/* NSFW TOGGLE STYLE */
+.nsfw-box {
+display: flex; align-items: flex-start; gap: 12px;
+background: #0f0f0f; border: 1px solid #333; padding: 12px;
+margin-bottom: 15px; border-radius: 4px;
+}
+.nsfw-box input { width: 18px !important; height: 18px; margin: 3px 0 0 0; cursor: pointer; accent-color: #ff4444; }
+.nsfw-box label { color: #fff; font-size: 0.9rem; cursor: pointer; font-weight: bold; }
+.nsfw-box span { display: block; color: #666; font-size: 0.75rem; font-weight: normal; margin-top: 2px; }
+
+.cyber-btn { width: 100%; padding: 14px; margin-top: 5px; background: linear-gradient(145deg, #1e1e1e, #161616); border: 1px solid #333; border-left: 2px solid var(--c-accent); border-right: 2px solid var(--c-accent); color: var(--c-accent); cursor: pointer; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; transition: 0.1s; border-radius: 4px; }
+.cyber-btn:hover { background: #fff; color: #000; box-shadow: 0 0 25px rgba(64,196,255,0.6); border-color: #fff; }
+.cyber-btn:active { transform: scale(0.98) translateY(1px); }
+
+.error-message { color: #ff4444; font-size: 11px; margin-bottom: 10px; text-align: center; }
+.switch-link { margin-top: 20px; font-size: 11px; color: #666; cursor: pointer; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+.modal-close { position: absolute; top: 15px; right: 20px; color: #444; cursor: pointer; font-size: 1.5rem; }
+
+/* --- 5. DRAG & DROP ZONE --- */
+input[type="file"] { display: none; }
+.drop-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; padding: 40px 20px; margin-bottom: 5px; border: 1px dashed #444; background: #0a0a0a; border-radius: 4px; cursor: pointer; transition: 0.2s; }
+.drop-zone:hover, .drop-zone.drag-over { border-color: var(--c-accent); background: #111; box-shadow: 0 0 15px rgba(64,196,255,0.1) inset; }
+.drop-zone svg { width: 30px; height: 30px; fill: #666; margin-bottom: 10px; transition: 0.2s; }
+.drop-zone:hover svg { fill: var(--c-accent); }
+.drop-text-main { font-size: 13px; font-weight: 800; color: #ccc; letter-spacing: 1px; text-transform: uppercase; }
+.drop-text-sub { font-size: 10px; color: #666; margin-top: 5px; text-transform: uppercase; }
+
+/* PROGRESS BAR */
+.upload-progress-container { width: 100%; height: 6px; background: #222; margin-top: 15px; border-radius: 3px; overflow: hidden; opacity: 0; transition: opacity 0.2s; display: none; }
+.upload-progress-bar { height: 100%; width: 0%; background: var(--c-accent); box-shadow: 0 0 10px var(--c-accent); transition: width 0.2s ease; }
+
+/* --- 6. DASHBOARD --- */
+#dashboard-ui { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 900px; height: 80vh; background: #0f0f0f; border: 1px solid #333; display: none; flex-direction: column; box-shadow: 0 0 100px black; border-radius: 8px; overflow: hidden; }
+.dash-header { padding: 20px; background: #161616; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; position: relative; }
+.dash-user-info h2 { margin: 0; color: #fff; text-transform: uppercase; font-size: 1.2rem; }
+.dash-badge { font-size: 10px; padding: 2px 6px; border-radius: 3px; margin-left: 10px; border: 1px solid #333; text-transform: uppercase; display:inline-block; }
+
+.badge-unverified { color: #666; border-color: #666; }
+.badge-verified { color: #0f0; border-color: #0f0; background: rgba(0,255,0,0.1); }
+.badge-subscribed { color: #ffd700; border-color: #ffd700; background: rgba(255, 215, 0, 0.1); text-shadow:0 0 5px gold; }
+.badge-premium { color: #b28dff; border-color: #b28dff; background: rgba(178, 141, 255, 0.1); text-shadow:0 0 5px #b28dff; }
+
+.dash-body { display: flex; flex: 1; overflow: hidden; }
+.dash-sidebar { width: 220px; background: #121212; border-right: 1px solid #333; padding: 20px 0; }
+
+.dash-nav-btn { position: relative; display: block; width: 100%; text-align: left; padding: 15px 25px; background: transparent; border: none; color: #666; cursor: pointer; text-transform: uppercase; font-weight: bold; font-size: 11px; transition: all 0.1s ease-out; letter-spacing: 1px; border-bottom: 1px solid #1a1a1a; }
+.dash-nav-btn:active { transform: scale(0.98); background: #000; color: #fff; }
+.dash-nav-btn.active { color: #fff; background: linear-gradient(90deg, transparent, rgba(64,196,255,0.05)); text-shadow: 0 0 8px var(--c-accent); }
+.dash-nav-btn.active::after { content: ''; position: absolute; top: 0; bottom: 0; right: 0; width: 4px; background: var(--c-accent); box-shadow: -5px 0 15px var(--c-accent); animation: fadeIn 0.3s ease-out; }
+.dash-nav-btn:hover { color: #fff; padding-left: 28px; }
+
+#dash-disconnect { margin-top: 50px; color: #ff4444; }
+#dash-disconnect:hover { color: #ff0000 !important; background: linear-gradient(90deg, transparent, rgba(255, 0, 0, 0.1)); text-shadow: 0 0 10px rgba(255, 0, 0, 0.6); }
+#dash-disconnect.active::after { background: #ff0000 !important; box-shadow: -5px 0 15px #ff0000 !important; }
+
+.dash-content { flex: 1; padding: 40px; overflow-y: auto; color: #ccc; }
+.dash-content h3 { color: var(--c-accent); border-bottom: 1px solid #333; padding-bottom: 15px; margin-top: 0; text-transform: uppercase; letter-spacing: 2px; }
+
+/* --- 7. DROPDOWN --- */
+#user-dropdown { position: fixed; background: #1c1c1c; border: 1px solid #444; border-left: 2px solid var(--c-accent); display: none; min-width: 160px; box-shadow: 0 10px 30px black; }
+#user-dropdown a { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #888; padding: 12px 16px; display: block; cursor: pointer; transition: 0.2s; letter-spacing: 1px; }
+#user-dropdown a:hover { background-color: #161616; color: #fff; padding-left: 20px; }
+
+/* --- 8. CYBER TOAST --- */
+#cyber-toast-container { position: fixed; bottom: 30px; right: 30px; pointer-events: none; display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+.cyber-toast { background: #1e1e1e; border-left: 4px solid var(--c-accent); color: #fff; padding: 16px 24px; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-family: var(--font-stack); font-size: 0.95rem; position: relative; overflow: hidden; min-width: 250px; opacity: 0; transform: translateX(50px); animation: toastSlideIn 0.3s forwards ease-out; }
+.cyber-toast.error { border-color: var(--c-err); }
+.cyber-toast.success { border-color: #0f0; }
+@keyframes toastSlideIn { to { opacity: 1; transform: translateX(0); } }
+.cyber-toast::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent); transform: skewX(-20deg); animation: shine-sweep 1s ease-in-out forwards; }
+@keyframes shine-sweep { 0% { left: -100%; opacity: 0; } 20% { opacity: 1; } 100% { left: 200%; opacity: 0; } }
+</style>
+
+<div id="firebase-modal-overlay"></div>
+
+<div id="firebase-login-modal" class="firebase-modal">
+<div class="modal-led-strip"><div class="led-L"></div><div class="led-R"></div></div>
+<span class="modal-close">&times;</span>
+<h3>System Access</h3>
+<input type="email" id="login-email" placeholder="EMAIL IDENTITY">
+<input type="password" id="login-password" placeholder="PASSPHRASE">
+<div id="login-error" class="error-message"></div>
+<button id="signin-btn" class="cyber-btn">Initialize Session</button>
+<div style="text-align:center;">
+<div class="switch-link" onclick="openModal('register')">Create New Identity //</div>
+<br>
+<div class="switch-link" style="color:#444; margin-top:10px;" onclick="resetPass()">Forgot Credentials?</div>
+</div>
+</div>
+
+<div id="firebase-register-modal" class="firebase-modal">
+<div class="modal-led-strip"><div class="led-L"></div><div class="led-R"></div></div>
+<span class="modal-close">&times;</span>
+<h3>New Identity</h3>
+<input type="email" id="reg-email" placeholder="EMAIL IDENTITY">
+<input type="password" id="reg-pass" placeholder="CREATE PASSPHRASE">
+<div id="reg-error" class="error-message"></div>
+<button id="create-btn" class="cyber-btn">Establish Link</button>
+<div style="text-align:center;">
+<div class="switch-link" onclick="openModal('login')">Return to Login //</div>
+</div>
+</div>
+
+<div id="firebase-profile-modal" class="firebase-modal">
+<div class="modal-led-strip"><div class="led-L"></div><div class="led-R"></div></div>
+<h3>Identity Setup</h3>
+<p>Configure your public node data.</p>
+<input type="text" id="setup-handle" placeholder="DISPLAY HANDLE">
+
+<select id="setup-role">
+<option value="User">User / Collector</option>
+<option value="Art Connoisseur">Art Connoisseur (VIP)</option>
+<option value="Digital Artist">Digital Artist / Illustrator</option>
+<option value="Traditional Artist">Traditional Artist / Painter</option>
+<option value="2D Animator">2-D Animator</option>
+<option value="3D Animator">3-D Animator</option>
+<option value="3D Artist">3D Modeler / Sculptor</option>
+<option value="Musician">Musician / Producer</option>
+<option value="Voice Actor">Voice Actor</option>
+<option value="Video Editor">Video Editor</option>
+<option value="Web Designer">Web Designer</option>
+<option value="Photographer">Photographer</option>
+<option value="Writer">Writer / Author</option>
+<option value="Mangaka">Mangaka</option>
+<option value="Game Dev">Game Developer</option>
+</select>
+
+<div class="nsfw-box">
+<input type="checkbox" id="setup-nsfw">
+<label for="setup-nsfw">
+Enable 18+ Content (NSFW)
+<span>View or post mature content.</span>
+</label>
+</div>
+
+<button id="save-profile-btn" class="cyber-btn">Save Identity</button>
+</div>
+
+<div id="firebase-reset-modal" class="firebase-modal">
+<div class="modal-led-strip"><div class="led-L"></div><div class="led-R"></div></div>
+<h3>Reset Credentials</h3>
+<p>Enter new passphrase below.</p>
+<input type="password" id="new-password" placeholder="NEW PASSPHRASE">
+<button id="confirm-reset-btn" class="cyber-btn">Update Security</button>
+</div>
+
+<div id="dashboard-ui">
+<div class="dash-header">
+<div class="modal-led-strip" style="opacity:0.5;"><div class="led-L"></div><div class="led-R"></div></div>
+<div class="dash-user-info" id="dash-header-info"></div>
+<button onclick="closeDashboard()" style="background:none; border:none; color:#666; font-size:24px; cursor:pointer;">×</button>
+</div>
+<div class="dash-body">
+<div class="dash-sidebar">
+<button class="dash-nav-btn active" onclick="switchDashTab('purchases')">My Downloads</button>
+<button class="dash-nav-btn" onclick="switchDashTab('verify')">ID Verification</button>
+<button class="dash-nav-btn" onclick="switchDashTab('studio')">Artist Studio</button>
+<button id="dash-disconnect" class="dash-nav-btn" onclick="switchDashTab('disconnect')">Disconnect</button>
+</div>
+<div class="dash-content" id="dash-main-view"></div>
+</div>
+</div>
+
+<div id="cyber-toast-container"></div>
+
+<div id="user-dropdown">
+<a onclick="openDashboard('purchases')">Dashboard</a>
+<a onclick="doLogout()">Logout</a>
+</div>

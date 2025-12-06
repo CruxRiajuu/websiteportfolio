@@ -1,0 +1,4150 @@
+1 - universal tagger
+
+
+<script>
+let isTicking = false;
+function updateFixedElements() {
+if (isTicking) return;
+isTicking = true;
+window.requestAnimationFrame(() => {
+const fixedElements = document.querySelectorAll('[data-fixed-element]');
+let topOffset = 0;
+let zIndex = 999999999;
+fixedElements.forEach(el => {
+const isHidden = el.classList.contains('hidden');
+el.style.zIndex = zIndex;
+zIndex--;
+if (!isHidden) {
+el.style.top = topOffset + 'px';
+topOffset += el.offsetHeight;
+} else {
+el.style.top = `-${el.offsetHeight}px`;
+}
+});
+document.body.style.paddingTop = topOffset + 'px';
+isTicking = false;
+});
+}
+window.addEventListener('fixed_elements_update', updateFixedElements);
+document.addEventListener('DOMContentLoaded', updateFixedElements);
+window.addEventListener('resize', updateFixedElements);
+</script>
+
+========================================================================
+
+2 - SKINNY NAV BAR
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+/* --- CYBERPUNK VARIABLES --- */
+:root {
+--c-accent: #40c4ff;
+--c-accent-glow: rgba(64,196,255,0.8);
+--c-nav-bg-top: #1e1e1e;
+--c-nav-bg-bot: #121212;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* --- ANIMATIONS --- */
+@keyframes shine-sweep {
+0% { left: -100%; opacity: 0; }
+20% { opacity: 1; }
+100% { left: 200%; opacity: 0; }
+}
+
+/* --- NAV CONTAINER --- */
+.top-bar-nav {
+font-family: 'Myriad Pro', system-ui, -apple-system, sans-serif;
+position: fixed;
+left: 0; right: 0; top: 0;
+transition: transform 0.4s cubic-bezier(0.2, 0, 0, 1);
+transform: translateY(0);
+will-change: transform;
+z-index: 9000;
+}
+.top-bar-nav.hidden {
+transform: translateY(-100%);
+}
+
+.top-bar {
+/* Matte Gradient Background */
+background: linear-gradient(180deg, var(--c-nav-bg-top), var(--c-nav-bg-bot));
+border-bottom: 1px solid #333;
+box-shadow: 0 5px 20px rgba(0,0,0,0.8);
+}
+
+.top-bar-container {
+display: flex;
+justify-content: space-between;
+align-items: center;
+/* REDUCED PADDING FOR THINNER BAR */
+padding: 6px 25px;
+max-width: 1400px;
+margin: 0 auto;
+}
+
+/* --- LOGO --- */
+.square-enix-logo img {
+/* REDUCED HEIGHT */
+height: 34px;
+width: auto;
+filter: brightness(0.9);
+transition: transform 0.2s ease, filter 0.2s ease;
+display: block;
+}
+.square-enix-logo img:hover {
+transform: scale(1.05);
+filter: brightness(1.2) drop-shadow(0 0 10px var(--c-accent-glow));
+}
+
+/* --- NAVIGATION LINKS --- */
+.top-nav-links { display: flex; align-items: center; gap: 30px; }
+
+.top-nav-link {
+color: #888;
+text-decoration: none;
+font-size: 13px;
+font-weight: 700;
+text-transform: uppercase;
+letter-spacing: 0.1em;
+transition: all 0.2s ease;
+position: relative;
+overflow: hidden;
+padding: 5px 0;
+}
+
+/* Glitch Flash Effect */
+.top-nav-link::after {
+content: ''; position: absolute; top: 0; left: -100%;
+width: 50%; height: 100%;
+background: linear-gradient(90deg, transparent, rgba(64,196,255,0.6), transparent);
+transform: skewX(-20deg);
+pointer-events: none;
+}
+
+.top-nav-link:hover {
+color: #fff;
+text-shadow: 0 0 8px var(--c-accent);
+}
+.top-nav-link:hover::after {
+animation: shine-sweep 0.4s ease-out forwards;
+}
+.top-nav-link:active {
+transform: scale(0.95);
+color: var(--c-accent);
+}
+
+/* --- ICONS (Cart & Profile) --- */
+.cart-icon, .profile-icon {
+color: #888;
+cursor: pointer;
+line-height: 1;
+transition: all 0.2s ease;
+text-decoration: none;
+position: relative;
+display: flex; align-items: center;
+}
+
+.cart-icon svg, .profile-icon svg {
+height: 19px; /* Slightly smaller to match thin bar */
+width: auto;
+display: block;
+fill: currentColor;
+transition: all 0.2s ease;
+}
+
+.cart-icon:hover, .profile-icon:hover {
+color: #fff;
+filter: drop-shadow(0 0 5px var(--c-accent));
+}
+.cart-icon:active, .profile-icon:active {
+transform: scale(0.9);
+}
+
+/* --- CART BADGE --- */
+.cart-badge {
+display: none;
+position: absolute;
+top: -8px;
+right: -10px;
+background-color: var(--c-accent);
+color: #000;
+border-radius: 3px;
+min-width: 16px;
+height: 16px;
+font-size: 10px;
+font-weight: 900;
+line-height: 16px;
+text-align: center;
+padding: 0 3px;
+box-shadow: 0 0 10px var(--c-accent-glow);
+border: 1px solid #fff;
+z-index: 10;
+}
+.cart-badge.visible { display: block; }
+
+</style>
+</head>
+<body>
+
+<nav class="top-bar-nav" data-fixed-element>
+<div class="top-bar">
+<div class="top-bar-container">
+
+<div class="square-enix-logo">
+<a href="https://spiritastudio.com/">
+<img src="https://i.imgur.com/tyNTFAM.png" alt="Logo">
+</a>
+</div>
+
+<div class="top-nav-links">
+<a href="#featuredart" class="top-nav-link">Featured Art</a>
+<a href="#updates" class="top-nav-link">Updates</a>
+<a href="#contact" class="top-nav-link">Contact</a>
+<a href="https://neotype.shop" class="top-nav-link">Merch</a>
+
+<div class="cart-icon">
+<svg aria-label="Cart" focusable="false" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M551.991 64H129.28l-8.329-44.423C118.822 8.226 108.911 0 97.362 0H12C5.373 0 0 5.373 0 12v8c0 6.627 5.373 12 12 12h78.72l69.927 372.946C150.305 416.314 144 431.42 144 448c0 35.346 28.654 64 64 64s64-28.654 64-64a63.681 63.681 0 0 0-8.583-32h145.167a63.681 63.681 0 0 0-8.583 32c0 35.346 28.654 64 64 64 35.346 0 64-28.654 64-64 0-17.993-7.435-34.24-19.388-45.868C506.022 391.891 496.76 384 485.328 384H189.28l-12-64h331.381c11.368 0 21.177-7.976 23.496-19.105l43.331-208C578.592 77.991 567.215 64 551.991 64zM240 448c0 17.645-14.355 32-32 32s-32-14.355-32-32 14.355-32 32-32 32 14.355 32 32zm224 32c-17.645 0-32-14.355-32-32s14.355-32 32-32 32 14.355 32 32-14.355 32-32 32zm38.156-192H171.28l-36-192h406.876l-40 192z"></path></svg>
+<span id="cart-item-count" class="cart-badge"></span>
+</div>
+
+<a href="javascript:void(0);" class="profile-icon">
+<svg aria-label="Profile" focusable="false" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H418.3c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304H178.3z"></path></svg>
+</a>
+
+</div>
+</div>
+</div>
+</nav>
+
+<script>
+// 1. Hide on Scroll Logic
+const topBarToHide = document.querySelector('.top-bar-nav');
+if (topBarToHide) {
+let lastScrollY = window.scrollY;
+let ticking = false;
+const updateVisibility = () => {
+const currentScrollY = window.scrollY;
+if (currentScrollY > lastScrollY && currentScrollY > 150) {
+if (!topBarToHide.classList.contains('hidden')) {
+topBarToHide.classList.add('hidden');
+}
+} else if (currentScrollY < lastScrollY || currentScrollY <= 50) {
+if (topBarToHide.classList.contains('hidden')) {
+topBarToHide.classList.remove('hidden');
+}
+}
+lastScrollY = currentScrollY;
+ticking = false;
+};
+const onScroll = () => {
+if (!ticking) {
+window.requestAnimationFrame(updateVisibility);
+ticking = true;
+}
+};
+window.addEventListener('scroll', onScroll, { passive: true });
+}
+
+// 2. Connect Cart Icon to Modal
+document.addEventListener('DOMContentLoaded', function() {
+const cartIcon = document.querySelector('.top-bar-nav .cart-icon');
+
+const updateBadge = () => {
+const savedCart = JSON.parse(localStorage.getItem('crux2025')||'[]');
+const badge = document.getElementById('cart-item-count');
+const count = savedCart.reduce((sum, item) => sum + item.qty, 0);
+
+if (badge) {
+if (count > 0) {
+badge.textContent = count;
+badge.classList.add('visible');
+} else {
+badge.classList.remove('visible');
+}
+}
+};
+
+updateBadge();
+
+if (cartIcon) {
+cartIcon.addEventListener('click', function() {
+if (typeof openCartModal === 'function') {
+openCartModal();
+} else {
+console.warn('Cart modal script not loaded yet.');
+}
+});
+}
+
+window.addEventListener('click', () => setTimeout(updateBadge, 500));
+});
+</script>
+</body>
+</html>
+
+==========================================================================
+
+
+3 - FFVII NAV BAR (Second Nav Bar - Normal)
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Navigation Bar</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Abel&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+@font-face {
+font-family: 'AdinaRegular';
+src: url('https://dl.dropboxusercontent.com/scl/fi/x9bmu7sborsohg919xni6/AdinaRegular.ttf?rlkey=r04u2rmyet9zs2ka2xwexmzqp') format('truetype');
+}
+body{margin:0;font-family:'Roboto',sans-serif}
+.ff7-nav-bar{background:linear-gradient(to bottom, #011f2a 0%, #01131a 45%, #000000 100%);border-bottom:1px solid #1c2d3a;height:80px;position:fixed;top:0;left:0;width:100%;padding:0 25px;transition:top .4s cubic-bezier(.2,0,0,1);will-change:top;z-index:1000;box-sizing:border-box}
+.ff7-nav-bar.hidden{top:-80px !important}
+.ff7-nav-container{display:flex;justify-content:space-between;align-items:center;width:100%;height:100%;max-width:1400px;margin:0 auto;position:relative}
+.ff7-nav-logo-link{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);height:100%;display:flex;align-items:center;padding:0 20px;transition:transform .3s ease}
+.ff7-nav-logo-link:hover{transform:translate(-50%,-50%) scale(1.15,1.02)}
+.ff7-nav-logo-img{height:60px;transition:filter .3s ease;filter:drop-shadow(1px 1px 1px rgba(0,0,0,.9))}
+.ff7-nav-logo-link:hover .ff7-nav-logo-img{filter:drop-shadow(0 0 18px rgba(0,185,229,1)) drop-shadow(1px 1px 1px rgba(0,0,0,.9))}
+.ff7-nav-list-left,.ff7-nav-list-right{display:flex;flex:1;list-style:none;margin:0;padding:0}
+.ff7-nav-list-left{padding-right:180px;justify-content:flex-end}
+.ff7-nav-list-right{padding-left:180px;justify-content:flex-start}
+.ff7-nav-item{position:relative}
+.ff7-nav-link{color:#fff;text-decoration:none;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:0 18px;display:flex;align-items:center;justify-content:center;height:80px;transition:color .3s,text-shadow .3s ease,transform .3s ease;white-space:nowrap;font-family:'AdinaRegular',sans-serif;position:relative;line-height:80px;z-index:10;background:0 0}
+.ff7-nav-submenu-link{color:#fff;text-decoration:none;font-size:14px;font-weight:400;text-transform:uppercase;letter-spacing:.5px;padding:8px 20px;display:flex;align-items:center;justify-content:center;height:30px;transition:color .3s,text-shadow .3s ease,background .3s,transform .3s ease;white-space:nowrap;font-family:'Abel',sans-serif;position:relative;line-height:30px;z-index:10;background:0 0}
+.ff7-nav-link:hover,.ff7-nav-submenu-link:hover{color:#00b9e5;text-shadow:0 0 10px #00b9e5;transform:scale(1.08)}
+.ff7-nav-link.active,.ff7-nav-submenu-link.active{color:#00b9e5;text-shadow:0 0 10px #00b9e5}
+.ff7-nav-link.active:hover,.ff7-nav-submenu-link.active:hover{transform:scale(1.08)}
+.ff7-nav-submenu{display:none;position:absolute;top:100%;list-style:none;margin:0;padding:5px 0;background:rgba(0,0,0,.9);backdrop-filter:blur(8px);border-top:2px solid #00b9e5;min-width:max-content;z-index:5}
+.ff7-nav-submenu .ff7-nav-item:hover>.ff7-nav-submenu-link{color:#00b9e5;background:rgba(0,185,229,.1)}
+.ff7-nav-item:hover>.ff7-nav-submenu{display:block}
+.ff7-nav-list-left>.ff7-nav-item>.ff7-nav-submenu{left:50%;transform:translateX(-50%)}
+.ff7-nav-list-right>.ff7-nav-item>.ff7-nav-submenu{right:50%;transform:translateX(50%)}
+.ff7-nav-list-left .ff7-nav-submenu .ff7-nav-submenu{top:-2px;left:100%;transform:none;border-top:none;border-left:2px solid #00b9e5}
+.ff7-nav-list-right .ff7-nav-submenu .ff7-nav-submenu{top:-2px;right:100%;transform:none;border-top:none;border-right:2px solid #00b9e5}
+.nav-marker-icon-left,.nav-marker-icon-right{opacity:0;position:absolute;top:50%;width:25px;height:25px;transition:opacity .3s ease-in-out,transform .3s ease-in-out,filter .3s;pointer-events:none;filter:drop-shadow(1px 1px 1px rgba(0,0,0,.9))}
+.ff7-nav-logo-link>.ff7-logo-marker.nav-marker-icon-left{left:-10px;transform:translateY(-50%)}
+.ff7-nav-logo-link>.ff7-logo-marker.nav-marker-icon-right{right:-10px;transform:translateY(-50%)}
+.ff7-nav-link>.nav-marker-icon-left,.ff7-nav-submenu-link>.nav-marker-icon-left{left:-10px;transform:translateY(-50%)}
+.ff7-nav-link>.nav-marker-icon-right,.ff7-nav-submenu-link>.nav-marker-icon-right{right:-10px;transform:translateY(-50%)}
+.ff7-nav-link:hover>.nav-marker-icon-left,.ff7-nav-submenu-link:hover>.nav-marker-icon-left,.ff7-nav-logo-link:hover>.ff7-logo-marker.nav-marker-icon-left{opacity:1 !important;filter:invert(100%) drop-shadow(0 0 5px #00b9e5) drop-shadow(1px 1px 1px rgba(0,0,0,.9));animation:breathe-on-hover-left 1s infinite alternate ease-in-out}
+.ff7-nav-link:hover>.nav-marker-icon-right,.ff7-nav-submenu-link:hover>.nav-marker-icon-right,.ff7-nav-logo-link:hover>.ff7-logo-marker.nav-marker-icon-right{opacity:1 !important;filter:invert(100%) drop-shadow(0 0 5px #00b9e5) drop-shadow(1px 1px 1px rgba(0,0,0,.9));animation:breathe-on-hover-right 1s infinite alternate ease-in-out}
+@keyframes breathe-on-hover-left{0%{transform:translateY(-50%) translateX(2px) scale(1)}100%{transform:translateY(-50%) translateX(-2px) scale(1.05)}}
+@keyframes breathe-on-hover-right{0%{transform:translateY(-50%) translateX(-2px) scale(1)}100%{transform:translateY(-50%) translateX(2px) scale(1.05)}}
+.ff7-hamburger-menu,.ff7-mobile-overlay{display:none}
+@media (max-width:1024px){.ff7-nav-list-left,.ff7-nav-list-right{display:none}.ff7-nav-bar{padding:0 15px}.ff7-hamburger-menu{display:flex;flex-direction:column;justify-content:space-around;width:30px;height:25px;cursor:pointer;position:absolute;right:0}.ff7-hamburger-menu span{width:100%;height:3px;background-color:#fff;transition:all .3s ease}.ff7-hamburger-menu.open span:nth-child(1){transform:rotate(45deg) translate(7px,7px)}.ff7-hamburger-menu.open span:nth-child(2){opacity:0}.ff7-hamburger-menu.open span:nth-child(3){transform:rotate(-45deg) translate(7px,-7px)}.ff7-mobile-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.95);backdrop-filter:blur(10px);z-index:999;display:block;opacity:0;visibility:hidden;transition:opacity .3s ease,visibility .3s ease}.ff7-mobile-overlay.open{opacity:1;visibility:visible}.ff7-mobile-nav-links{text-align:center;padding-top:160px;box-sizing:border-box;width:100%;height:100%;overflow-y:auto}.ff7-mobile-link{color:#fff;text-decoration:none;font-size:1.5rem;text-transform:uppercase;display:block;margin:15px 0;padding:10px;transition:color .3s,text-shadow .3s;font-family:'AdinaRegular',sans-serif}.ff7-mobile-link:hover,.ff7-mobile-link.active{color:#00b9e5;text-shadow:0 0 10px #00b9e5}.ff7-mobile-sublink{color:#ccc;font-size:1.2rem;margin:10px 0;font-family:'Abel',sans-serif;font-weight:400}}
+</style>
+</head>
+<body>
+
+<nav class="ff7-nav-bar" data-fixed-element>
+<div class="ff7-nav-container">
+<ul id="nav-list-left" class="ff7-nav-list-left"></ul>
+<a href="#home" class="ff7-nav-logo-link">
+<img src="https://i.imgur.com/DiHNKFw.png" alt="Logo" class="ff7-nav-logo-img">
+<img src="https://i.imgur.com/ar5wbxj.png" alt="Left Marker" class="nav-marker-icon-left ff7-logo-marker">
+<img src="https://i.imgur.com/uJguEWG.png" alt="Right Marker" class="nav-marker-icon-right ff7-logo-marker">
+</a>
+<ul id="nav-list-right" class="ff7-nav-list-right"></ul>
+<div class="ff7-hamburger-menu">
+<span></span>
+<span></span>
+<span></span>
+</div>
+</div>
+</nav>
+
+<div class="ff7-mobile-overlay">
+<div id="mobile-nav-links" class="ff7-mobile-nav-links"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded',function(){const e='https://raw.githubusercontent.com/CruxRiajuu/carrd-assets/main/nav-data.json';let t=null;function n(e,t=!1){const o=document.createDocumentFragment();return e.forEach(e=>{const r=document.createElement('li');r.className='ff7-nav-item';const a=document.createElement('a');a.href=e.url,a.className=t?'ff7-nav-submenu-link':'ff7-nav-link',a.textContent=e.name;const i=document.createElement('img');i.className='nav-marker-icon-left',i.src='https://i.imgur.com/ar5wbxj.png',i.alt='Left Marker',a.appendChild(i);const d=document.createElement('img');d.className='nav-marker-icon-right',d.src='https://i.imgur.com/uJguEWG.png',d.alt='Right Marker',a.appendChild(d),r.appendChild(a),e.children&&e.children.length>0&&(()=>{const t=document.createElement('ul');t.className='ff7-nav-submenu',t.appendChild(n(e.children,!0)),r.appendChild(t)})(),o.appendChild(r)}),o}function o(e,t){e.forEach(e=>{const n=document.createElement('a');n.href=e.url,n.className='ff7-mobile-link',n.textContent=e.name,t.appendChild(n),e.children&&e.children.length>0&&e.children.forEach(e=>{const n=document.createElement('a');n.href=e.url,n.className='ff7-mobile-link ff7-mobile-sublink',n.textContent=`- ${e.name}`,t.appendChild(n)})})}function r(){document.querySelectorAll('.ff7-nav-bar a, .ff7-mobile-overlay a').forEach(e=>e.classList.remove('active'));const e=window.location.hash||'#home';document.querySelectorAll(`.ff7-nav-bar a[href="${e}"], .ff7-mobile-overlay a[href="${e}"]`).forEach(e=>{if(e){e.classList.add('active');let t=e;for(;t;){const e=t.closest('li.ff7-nav-item');if(!e)break;const n=e.parentElement;if(!n||!n.classList.contains('ff7-nav-submenu'))break;const o=n.closest('li.ff7-nav-item');if(!o)break;const r=o.querySelector(':scope > a');if(r)r.classList.add('active'),t=r;else break}}})}fetch(e).then(e=>{if(!e.ok)throw new Error('Network response was not ok');return e.json()}).then(e=>{t=e;const a=document.getElementById('nav-list-left'),i=document.getElementById('nav-list-right'),d=document.getElementById('mobile-nav-links');a&&e.leftNav&&(a.appendChild(n(e.leftNav)),o(e.leftNav,d)),i&&e.rightNav&&(i.appendChild(n(e.rightNav)),o(e.rightNav,d)),r(),window.addEventListener('hashchange',r),window.dispatchEvent(new Event('fixed_elements_update'))}).catch(e=>{console.error('Error fetching or building nav bar:',e);const t=document.getElementById('nav-list-right');t&&(t.innerHTML='<li class="ff7-nav-item"><a href="#" class="ff7-nav-link" style="color: #ff6b6b; text-shadow: none;">MENU FAILED TO LOAD</a></li>'),window.dispatchEvent(new Event('fixed_elements_update'))});const a=document.querySelector('.ff7-hamburger-menu'),i=document.querySelector('.ff7-mobile-overlay');function d(){a.classList.toggle('open'),i.classList.toggle('open')}a.addEventListener('click',d),i.addEventListener('click',function(e){(e.target.classList.contains('ff7-mobile-link')||e.target===i)&&d()});const l=document.querySelector('.ff7-nav-bar');if(l){let e=window.scrollY,t=!1;const n=()=>{const o=window.scrollY;o>e&&o>150?l.classList.contains('hidden')||(l.classList.add('hidden'),window.dispatchEvent(new Event('fixed_elements_update'))):o<e||o<=50?l.classList.contains('hidden')&&(l.classList.remove('hidden'),window.dispatchEvent(new Event('fixed_elements_update'))):void 0,e=o,t=!1},o=()=>{t||(window.requestAnimationFrame(n),t=!0)};window.addEventListener('scroll',o,{passive:!0})}});
+</script>
+
+</body>
+</html>
+
+===========================================================================
+
+
+4 - Reduce Motion Toggle
+
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400&display=swap');
+#reduce-motion-container { position: fixed; left: 0; right: 0; transition: transform 0.4s cubic-bezier(0.2, 0, 0, 1); transform: translateY(0); will-change: transform; background: #439CB6; width: 100%; padding: 5px 0; display: flex; justify-content: center; align-items: center; gap: 8px; }
+#reduce-motion-container.hidden { transform: translateY(-565%); }
+#reduce-motion-toggle { width: 36px; height: 18px; background: transparent; border: 1.5px solid #FFFFFF; border-radius: 9px; position: relative; cursor: pointer; transition: all 0.2s; }
+#reduce-motion-toggle::before { content: ''; width: 12px; height: 12px; background: #FFFFFF; border-radius: 50%; position: absolute; left: 1.5px; top: 1.5px; transition: left 0.2s; }
+#reduce-motion-toggle.active::before { left: 20.5px; }
+#reduce-motion-label { color: #FFFFFF; font-size: 16px; font-family: 'Oswald', sans-serif; font-weight: 300; letter-spacing: 0.2px; text-transform: uppercase; cursor: pointer; }
+.no-motion * { transition: none !important; animation: none !important; }
+</style>
+<div id="reduce-motion-container" data-fixed-element>
+<label id="reduce-motion-label" for="reduce-motion-toggle">Reduce Motion</label>
+<button id="reduce-motion-toggle" aria-labelledby="reduce-motion-label"></button>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+const container = document.getElementById('reduce-motion-container');
+const toggle = document.getElementById('reduce-motion-toggle');
+const label = document.getElementById('reduce-motion-label');
+const body = document.body;
+let isInteracting = false;
+let ticking = false;
+let lastScrollY = window.scrollY;
+
+if (container && toggle && body && label) {
+const updateVisibility = () => {
+const currentScrollY = window.scrollY;
+if (!isInteracting) {
+if (currentScrollY > lastScrollY && currentScrollY > 150) {
+if (!container.classList.contains('hidden')) {
+container.classList.add('hidden');
+window.dispatchEvent(new Event('fixed_elements_update'));
+}
+} else if (currentScrollY < lastScrollY || currentScrollY <= 50) {
+if (container.classList.contains('hidden')) {
+container.classList.remove('hidden');
+window.dispatchEvent(new Event('fixed_elements_update'));
+}
+}
+}
+lastScrollY = currentScrollY;
+ticking = false;
+};
+const onScroll = () => { if (!ticking) { window.requestAnimationFrame(updateVisibility); ticking = true; } };
+const handleInteractionStart = () => { isInteracting = true; container.classList.remove('hidden'); };
+const handleInteractionEnd = () => { isInteracting = false; };
+
+window.addEventListener('scroll', onScroll, { passive: true });
+container.addEventListener('mouseenter', handleInteractionStart);
+container.addEventListener('touchstart', handleInteractionStart, { passive: true });
+container.addEventListener('mouseleave', handleInteractionEnd);
+container.addEventListener('touchend', handleInteractionEnd);
+
+const toggleMotion = () => {
+const isActive = toggle.classList.toggle('active');
+body.classList.toggle('no-motion', isActive);
+localStorage.setItem('reduceMotion', isActive ? 'on' : 'off');
+};
+toggle.addEventListener('click', toggleMotion);
+label.addEventListener('click', () => toggle.click());
+
+const savedState = localStorage.getItem('reduceMotion');
+if (savedState === 'on') {
+body.classList.add('no-motion');
+toggle.classList.add('active');
+}
+}
+});
+</script>
+
+========================================================================
+
+
+5 - Space Remover (without it there is a huge gap on top of pages)
+
+
+<style>
+body {
+padding-top: 0 !important;
+}
+</style>
+
+=========================================================================
+
+
+6 - SPACER (moves shit down)
+
+
+<br>
+<br>
+<br>
+<br>
+<br>
+
+
+=======================================================================
+
+
+7 - Info (splash screen text)
+
+
+<center>
+<div style="margin: 10px 0;">
+<p style="font-family: 'MangaMasterBB-BoldItal'; color: #F6F6F6; text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5); font-size: 20px;">
+I’m Crux. My expertise lies in:
+</p>
+</div>
+
+<div style="margin: 10px 0;">
+<p style="font-family: 'MangaMasterBB-BoldItal'; color: #F6F6F6; text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5); font-size: 15px;">Illustration, Animation, V-Tuber Modeling, Logo Design, and Video Editing.
+<br>
+</p>
+</div>
+
+<div style="margin: 10px 0;">
+<p style="font-family: 'MangaMasterBB-BoldItal'; color: #F6F6F6; text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5); font-size: 15px;">
+Let me give your ideas life.
+</p>
+</div>
+</center>
+
+
+============================================================================
+
+
+8 - Carousel Gallery
+
+
+<div class="gallery-container">
+<div class="gallery-wrapper">
+<div class="frame-overlay"></div>
+<div id="photo-rotator"></div>
+<button onclick="rotatePrev()" class="photo-nav-btn prev-btn">&#10094;</button>
+<button onclick="rotateNext()" class="photo-nav-btn next-btn">&#10095;</button>
+<div id="lightbox-overlay" onclick="closeLightbox()">
+<div class="lightbox-content" onclick="event.stopPropagation()">
+<div id="lightbox-filmstrip"></div>
+</div>
+<div id="lightbox-thumbnails-container" onclick="event.stopPropagation()"></div>
+<button onclick="lightboxPrev(); event.stopPropagation();" class="lightbox-nav-btn lightbox-prev-btn">&#10094;</button>
+<button onclick="lightboxNext(); event.stopPropagation();" class="lightbox-nav-btn lightbox-next-btn">&#10095;</button>
+<button onclick="closeLightbox(); event.stopPropagation();" class="lightbox-close-btn">✕</button>
+</div>
+</div>
+</div>
+
+<style>
+/* Main container for responsiveness */
+.gallery-container { max-width: 800px; width: 95%; margin: 2em auto; }
+.gallery-wrapper { position: relative; width: 100%; aspect-ratio: 8 / 5; margin: auto; overflow: visible; }
+.frame-overlay { pointer-events: none; position: absolute; inset: 0; background-image: url('https://i.imgur.com/FN5nmjZ.png'); background-size: contain; background-repeat: no-repeat; background-position: center; z-index: 2; filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.5)); }
+#photo-rotator { position: relative; width: 100%; height: 100%; perspective: 1200px; z-index: 1; opacity: 0; transition: opacity 0.4s ease; }
+.photo-display { position: absolute; max-width: 79%; max-height: 86%; left: 50%; top: 50%; transform-origin: center; transition: transform 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 1.5s ease, filter 0.4s ease, box-shadow 0.4s ease; transform-style: preserve-3d; backface-visibility: hidden; opacity: 0; object-fit: contain; border-radius: 0px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); cursor: default; z-index: 1; will-change: transform, opacity; }
+.photo-display.center-focus { opacity: 1; cursor: pointer; z-index: 3; filter: none; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+.photo-display.center-focus:hover { transform: translate(-50%, -50%) translateZ(220px) scale(1.02); filter: drop-shadow(0 0 8px rgba(0, 31, 162, 0.8)); box-shadow: 0 15px 40px rgba(0,0,0,0.7); }
+.photo-nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: none; color: white; font-size: 2.5em; border: none; cursor: pointer; z-index: 10; filter: drop-shadow(2px 2px 8px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 10px rgba(0, 31, 162, 0.6)); transition: all 0.3s ease; will-change: transform, filter; }
+.photo-nav-btn.prev-btn { left: -40px; }
+.photo-nav-btn.next-btn { right: -40px; }
+.photo-nav-btn:hover { filter: drop-shadow(2px 2px 8px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 15px rgba(0, 31, 162, 0.9)) !important; transform: translateY(-50%) scale(1.1) !important; }
+
+/* Lightbox Styles */
+#lightbox-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2147483647; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.lightbox-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; height: 85%; max-width: 1400px; overflow: hidden; }
+#lightbox-filmstrip { height: 100%; display: flex; transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
+.lightbox-image-wrapper { width: 100%; height: 100%; flex-shrink: 0; display: flex; justify-content: center; align-items: center; }
+.lightbox-image-wrapper img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+
+/* ✨ MODIFIED CSS: Increased z-index to guarantee buttons are visible */
+.lightbox-nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: none; color: white; font-size: 3em; border: none; cursor: pointer; filter: drop-shadow(2px 2px 8px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 12px rgba(0, 31, 162, 0.7)); transition: all 0.3s ease; will-change: transform, filter; padding: 20px; z-index: 99; }
+.lightbox-nav-btn.lightbox-prev-btn { left: 5%; }
+.lightbox-nav-btn.lightbox-next-btn { right: 5%; }
+.lightbox-close-btn { position: absolute; background: none; color: white; font-size: 2em; border: none; cursor: pointer; filter: drop-shadow(2px 2px 8px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 10px rgba(0, 31, 162, 0.6)); transition: all 0.3s ease; top: 4%; right: 4%; padding: 20px; z-index: 99; }
+
+.lightbox-nav-btn:hover, .lightbox-close-btn:hover { filter: drop-shadow(2px 2px 8px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 15px rgba(0, 31, 162, 0.9)) !important; transform: translateY(-50%) scale(1.1) !important; }
+.lightbox-close-btn:hover { transform: scale(1.1) !important; }
+#lightbox-thumbnails-container { position: absolute; bottom: 5%; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; padding: 10px; background: rgba(0,0,0,0.25); border-radius: 10px; max-width: 90%; }
+.lightbox-thumb { width: 70px; height: 50px; object-fit: cover; cursor: pointer; border: 2px solid transparent; border-radius: 4px; transition: all 0.3s ease; opacity: 0.6; }
+.lightbox-thumb:hover { opacity: 1; transform: scale(1.05); }
+.lightbox-thumb.active { border-color: #ffffff; opacity: 1; transform: scale(1.05); }
+@media (max-width: 768px) { .photo-nav-btn.prev-btn { left: 5px; } .photo-nav-btn.next-btn { right: 5px; } .lightbox-nav-btn { font-size: 2.5em; } .lightbox-nav-btn.lightbox-prev-btn { left: 0; } .lightbox-nav-btn.lightbox-next-btn { right: 0; } .lightbox-close-btn { top: 0; right: 0; } #lightbox-thumbnails-container { overflow-x: auto; justify-content: flex-start; } }
+</style>
+
+<script>
+const rotatorImages = [
+"https://i.imgur.com/K59fz6W.jpg",
+"https://i.imgur.com/PSvIweG.jpg",
+"https://i.imgur.com/YyfAQwZ.jpg",
+"https://i.imgur.com/83pW10Q.jpeg",
+"https://i.imgur.com/1SaK8Ye.png"
+];
+
+let rotatorIndex = 0;
+let images = [];
+let touchStartX = 0;
+let touchEndX = 0;
+let isFirstBuild = true;
+
+function getDynamicPositions() { const rotator = document.getElementById("photo-rotator"); if (!rotator) return []; const rotatorWidth = rotator.offsetWidth; const isMobile = window.innerWidth <= 768; const xOffset = isMobile ? rotatorWidth * 0.35 : rotatorWidth * 0.35; const zOffsetCenter = isMobile ? 100 : 200; const zOffsetSide = isMobile ? -25 : -50; const scaleSide = isMobile ? 0.65 : 0.7; const rotation = isMobile ? -40 : -45; return [ { transform: `translate(-50%, -50%) translateZ(${zOffsetCenter}px) scale(1)`, opacity: 1, zIndex: 3, cursor: "pointer" }, { transform: `translate(-50%, -50%) rotateY(${rotation}deg) translateX(${xOffset}px) translateZ(${zOffsetSide}px) scale(${scaleSide})`, opacity: 0.4, zIndex: 2, cursor: "default" }, { transform: `translate(-50%, -50%) rotateY(${-rotation}deg) translateX(-${xOffset}px) translateZ(${zOffsetSide}px) scale(${scaleSide})`, opacity: 0.4, zIndex: 2, cursor: "default" } ]; }
+function buildRotator() { const container = document.getElementById("photo-rotator"); if (!container) return; if (images.length === 0) { rotatorImages.forEach((src, i) => { const img = document.createElement("img"); img.src = src; img.className = "photo-display"; img.alt = `Gallery image ${i + 1}`; img.onclick = () => { if (i === rotatorIndex) openLightbox(); }; container.appendChild(img); images.push(img); }); } if (isFirstBuild) { images.forEach(img => img.style.transition = 'none'); } const positions = getDynamicPositions(); images.forEach((img, i) => { let posIndex = (i - rotatorIndex + rotatorImages.length) % rotatorImages.length; if (posIndex === 0) { Object.assign(img.style, positions[0]); img.classList.add("center-focus"); } else if (posIndex === 1) { Object.assign(img.style, positions[1]); img.classList.remove("center-focus"); } else if (posIndex === rotatorImages.length - 1) { Object.assign(img.style, positions[2]); img.classList.remove("center-focus"); } else { img.style.opacity = 0; img.style.zIndex = 0; img.style.cursor = "default"; img.style.transform = "translate(-50%, -50%) scale(0)"; img.classList.remove("center-focus"); } }); if (isFirstBuild) { void container.offsetWidth; images.forEach(img => img.style.transition = ''); isFirstBuild = false; } container.style.opacity = 1; }
+function rotateNext() { rotatorIndex = (rotatorIndex + 1) % rotatorImages.length; buildRotator(); }
+function rotatePrev() { rotatorIndex = (rotatorIndex - 1 + rotatorImages.length) % rotatorImages.length; buildRotator(); }
+function openLightbox() { const overlay = document.getElementById("lightbox-overlay"); overlay.style.display = "block"; document.body.style.overflow = "hidden"; populateLightboxContent(); updateLightboxPosition(false); overlay.addEventListener('touchstart', handleTouchStart, { passive: true }); overlay.addEventListener('touchend', handleTouchEnd, { passive: true }); }
+function closeLightbox() { const overlay = document.getElementById("lightbox-overlay"); overlay.style.display = "none"; document.body.style.overflow = "auto"; overlay.removeEventListener('touchstart', handleTouchStart); overlay.removeEventListener('touchend', handleTouchEnd); }
+function lightboxNext() { rotatorIndex = (rotatorIndex + 1) % rotatorImages.length; updateLightboxPosition(true); buildRotator(); }
+function lightboxPrev() { rotatorIndex = (rotatorIndex - 1 + rotatorImages.length) % rotatorImages.length; updateLightboxPosition(true); buildRotator(); }
+function updateLightboxPosition(withAnimation = true) { const filmstrip = document.getElementById('lightbox-filmstrip'); const newTransform = `translateX(-${rotatorIndex * 100}%)`; filmstrip.style.transition = withAnimation ? '' : 'none'; filmstrip.style.transform = newTransform; const thumbnails = document.querySelectorAll(".lightbox-thumb"); thumbnails.forEach((thumb, i) => { if (i === rotatorIndex) { thumb.classList.add("active"); thumb.scrollIntoView({ behavior: 'smooth', inline: 'center' }); } else { thumb.classList.remove("active"); } }); }
+function populateLightboxContent() { const filmstrip = document.getElementById("lightbox-filmstrip"); const thumbContainer = document.getElementById("lightbox-thumbnails-container"); filmstrip.innerHTML = ""; thumbContainer.innerHTML = ""; rotatorImages.forEach((src, i) => { const wrapper = document.createElement("div"); wrapper.className = "lightbox-image-wrapper"; const img = document.createElement("img"); img.src = src; img.alt = `Lightbox image ${i + 1}`; wrapper.appendChild(img); filmstrip.appendChild(wrapper); const thumb = document.createElement("img"); thumb.src = src; thumb.className = "lightbox-thumb"; thumb.alt = `Thumbnail ${i + 1}`; thumb.onclick = () => { rotatorIndex = i; updateLightboxPosition(true); buildRotator(); }; thumbContainer.appendChild(thumb); }); }
+function handleTouchStart(e) { touchStartX = e.changedTouches[0].screenX; }
+function handleTouchEnd(e) { touchEndX = e.changedTouches[0].screenX; handleSwipeGesture(); }
+function handleSwipeGesture() { const swipeThreshold = 50; if (touchEndX < touchStartX - swipeThreshold) { lightboxNext(); } else if (touchEndX > touchStartX + swipeThreshold) { lightboxPrev(); } }
+
+/* ✨ MODIFIED SCRIPT: Removed the old click listener, as it's now handled by onclick in the HTML. */
+document.addEventListener('keydown', function(e) { const lightbox = document.getElementById("lightbox-overlay"); if (lightbox.style.display === "block") { if (e.key === 'Escape') closeLightbox(); else if (e.key === 'ArrowLeft') lightboxPrev(); else if (e.key === 'ArrowRight') lightboxNext(); } });
+
+window.addEventListener('resize', buildRotator);
+document.addEventListener('DOMContentLoaded', buildRotator);
+</script>
+
+
+===========================================================================
+
+9 - Reactive Video Collage ANIMATIONS
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video Gallery</title>
+<link href="https://fonts.googleapis.com/css2?family=Abel&display=swap" rel="stylesheet">
+<style>
+body {
+background-color: #1a1a1a;
+margin: 0;
+font-family: 'Abel', sans-serif;
+}
+
+.video-gallery {
+display: flex;
+flex-wrap: wrap;
+justify-content: center;
+gap: 20px;
+padding: 20px;
+margin-top: 100px;
+}
+
+.video-item {
+background-color: #2b2b2b;
+border-radius: 4px;
+overflow: hidden;
+box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+display: flex;
+flex-direction: column;
+flex: 0 1 320px;
+transition: all 0.4s ease-in-out; /* Smooth transitions for size/shadow changes */
+}
+
+/* This simple rule removes the pushdown margin on larger screens */
+@media (min-width: 769px) {
+.video-gallery {
+margin-top: 0;
+}
+.video-item {
+cursor: pointer;
+}
+
+/* NEW: Hover effect for tablet and PC */
+.video-item:hover {
+transform: scale(1.05); /* Slightly enlarges the video item */
+box-shadow: 0 8px 25px rgba(0, 255, 255, 0.3); /* Adds a subtle glow */
+z-index: 10; /* Ensures it appears above other items during hover */
+}
+}
+
+.video-embed {
+width: 100%;
+border: none;
+display: block;
+aspect-ratio: 16 / 9;
+}
+
+.video-description {
+padding: 10px 15px;
+text-align: center;
+}
+
+.video-description p {
+margin: 4px 0;
+}
+
+.video-title {
+font-family: 'Abel';
+color: #32E5FF;
+text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+font-size: 20px;
+font-style: italic;
+}
+
+.video-subtitle {
+font-family: 'Abel';
+color: #ECECEC;
+text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+font-size: 15px;
+}
+</style>
+</head>
+<body>
+
+<div class="video-gallery">
+<div class="video-item">
+<iframe class="video-embed" src="https://drive.google.com/file/d/14IEs7zE0hYSnmInD58Os9fBcxpu7DTq4/preview" allowfullscreen></iframe>
+<div class="video-description">
+<p class="video-title">Crux Riajuu</p>
+<p class="video-subtitle">Intro Logos Sampler</p>
+</div>
+</div>
+<div class="video-item">
+<iframe class="video-embed" src="https://drive.google.com/file/d/1bKLaRl1LJt8eD7DyMf0_nFG_rC3Ng_nP/preview" allowfullscreen></iframe>
+<div class="video-description">
+<p class="video-title">Haley's Lament</p>
+<p class="video-subtitle">JRPG Character Sprites</p>
+</div>
+</div>
+<div class="video-item">
+<iframe class="video-embed" src="https://drive.google.com/file/d/1nik7-6AejnGJBPPt7lNfkRIj0kmsHIHr/preview" allowfullscreen></iframe>
+<div class="video-description">
+<p class="video-title">Vegeta Final Flash</p>
+<p class="video-subtitle">Made For GIF</p>
+</div>
+</div>
+<div class="video-item">
+<iframe class="video-embed" src="https://drive.google.com/file/d/1aCxcW-Y847xmxG0fz8AxNv1nvRrNdLxp/preview" allowfullscreen></iframe>
+<div class="video-description">
+<p class="video-title">Skeleton Punchers</p>
+<p class="video-subtitle">Title Reveal</p>
+</div>
+</div>
+<div class="video-item">
+<iframe class="video-embed" src="https://drive.google.com/file/d/1MkbjRTYa7TSG1yV06LbpOeEwUKJElxG1/preview" allowfullscreen></iframe>
+<div class="video-description">
+<p class="video-title">Punch-A-Bunch</p>
+<p class="video-subtitle">Character Concept</p>
+</div>
+</div>
+</div>
+
+</body>
+</html>
+
+
+===========================================================================
+
+10 - Video Lightbox Part 1
+
+
+<iframe
+src="https://cruxriajuu.github.io/carrd-assets/video_thumbnails.html"
+style="width: 100%; height: 400px; border: none; background-color: transparent;">
+</iframe>
+
+
+============================================================================
+
+11 - Video Lightbox Part 2
+
+
+<style>
+/* --- Lightbox Styles --- */
+.lightbox-overlay {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0, 0, 0, 0.9);
+display: none;
+z-index: 1000000000;
+}
+
+.lightbox-overlay.is-visible {
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.lightbox-main-container {
+max-width: 900px;
+width: 90%;
+position: relative;
+}
+
+.lightbox-content-wrapper {
+width: 100%;
+height: 90vh;
+}
+
+.lightbox-close-btn {
+position: absolute;
+top: -40px;
+right: -40px;
+background: none;
+border: none;
+cursor: pointer;
+z-index: 10;
+width: 40px;
+height: 40px;
+}
+
+.close-button-diamond {
+width: 30px;
+height: 30px;
+background-color: rgb(0, 0, 0);
+border: 2px solid rgb(125, 187, 206);
+transform: rotate(45deg) scale(1);
+position: relative;
+display: flex;
+justify-content: center;
+align-items: center;
+color: rgb(125, 187, 206);
+transition: border-width 0.2s ease-in-out, transform 0.2s ease-in-out;
+font-size: 2.5rem;
+}
+
+.close-button-diamond:hover {
+border-width: 5px;
+transform: rotate(45deg) scale(1.1);
+}
+
+.close-button-diamond span {
+transform: rotate(-45deg);
+display: block;
+line-height: 1;
+}
+
+.lightbox-carousel {
+display: flex;
+flex-direction: column;
+height: 100%;
+overflow-y: auto;
+}
+
+.video-container {
+position: relative;
+padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+height: 0;
+overflow: hidden;
+margin-bottom: 20px;
+}
+
+.video-container iframe {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+}
+
+/* --- ✅ NEW: Mobile Responsive Adjustments --- */
+@media screen and (max-width: 768px) {
+.lightbox-main-container {
+width: 95%; /* Use a bit more of the screen width */
+}
+
+.lightbox-content-wrapper {
+height: 85vh; /* Reduce height to create vertical margins for closing */
+}
+
+.lightbox-close-btn {
+/* Reposition the button to be INSIDE the container */
+top: 5px;
+right: 5px;
+/* Enlarge touch target for accessibility */
+width: 44px;
+height: 44px;
+}
+
+.close-button-diamond {
+width: 32px;
+height: 32px;
+font-size: 2.2rem;
+}
+}
+</style>
+
+<div id="video-gallery-lightbox" class="lightbox-overlay">
+<div class="lightbox-main-container">
+<button class="lightbox-close-btn">
+<div class="close-button-diamond"><span>&times;</span></div>
+</button>
+<div class="lightbox-content-wrapper">
+<div class="lightbox-carousel"></div>
+</div>
+</div>
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+let player1, player2;
+function onPlayerStateChange(event) {
+if (event.data === YT.PlayerState.PLAYING) {
+const playingPlayerId = event.target.getIframe().id;
+if (playingPlayerId === 'video-player-1' && player2) player2.pauseVideo();
+else if (playingPlayerId === 'video-player-2' && player1) player1.pauseVideo();
+}
+}
+
+function initLightboxController() {
+const lightbox = document.getElementById('video-gallery-lightbox');
+if (!lightbox) {
+setTimeout(initLightboxController, 100);
+return;
+}
+
+const closeBtn = lightbox.querySelector('.lightbox-close-btn');
+const lightboxCarousel = lightbox.querySelector('.lightbox-carousel');
+
+const openLightbox = (clickedVideoId, otherVideoId) => {
+lightboxCarousel.innerHTML = `<div class="video-container"><div id="video-player-1"></div></div><div class="video-container"><div id="video-player-2"></div></div>`;
+lightbox.classList.add('is-visible');
+document.body.style.overflow = 'hidden';
+setTimeout(() => {
+initializePlayers(clickedVideoId, otherVideoId);
+}, 50);
+};
+
+const initializePlayers = (firstVideoId, secondVideoId) => {
+player1 = new YT.Player('video-player-1', { height: '100%', width: '100%', videoId: firstVideoId, playerVars: { 'autoplay': 1, 'rel': 0 }, events: { 'onStateChange': onPlayerStateChange } });
+player2 = new YT.Player('video-player-2', { height: '100%', width: '100%', videoId: secondVideoId, playerVars: { 'rel': 0 }, events: { 'onStateChange': onPlayerStateChange } });
+};
+
+const closeLightbox = () => {
+lightbox.classList.remove('is-visible');
+if (player1) player1.destroy();
+if (player2) player2.destroy();
+player1 = null; player2 = null;
+lightboxCarousel.innerHTML = '';
+document.body.style.overflow = 'auto';
+};
+
+// This is the "receiver" that listens for the message from your iframe
+window.addEventListener('message', function(event) {
+// A basic security check for the origin can be added here if needed
+// if (event.origin !== 'https://cruxriajuu.github.io') return;
+
+if (event.data && event.data.type === 'open-video-lightbox') {
+openLightbox(event.data.clickedId, event.data.otherId);
+}
+});
+
+closeBtn.addEventListener('click', closeLightbox);
+lightbox.addEventListener('click', (e) => {
+if (e.target === lightbox) closeLightbox();
+});
+}
+
+// Use the YouTube API's ready function to initialize our listener
+window.onYouTubeIframeAPIReady = function() {
+initLightboxController();
+};
+</script>
+
+
+=============================================================================
+
+12 - Reactive Video Collage VIDEOS PAGE
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video Gallery</title>
+<link href="https://fonts.googleapis.com/css2?family=Abel&display=swap" rel="stylesheet">
+<style>
+body {
+background-color: #1a1a1a;
+margin: 0;
+font-family: 'Abel', sans-serif;
+}
+
+.video-gallery {
+display: flex;
+flex-wrap: wrap;
+justify-content: center;
+gap: 20px;
+padding: 20px;
+margin-top: 100px;
+}
+
+.video-item {
+background-color: #2b2b2b;
+border-radius: 4px;
+overflow: hidden;
+box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+display: flex;
+flex-direction: column;
+flex: 0 1 320px;
+transition: all 0.4s ease-in-out; /* Smooth transitions for size/shadow changes */
+}
+
+/* This simple rule removes the pushdown margin on larger screens */
+@media (min-width: 769px) {
+.video-gallery {
+margin-top: 0;
+}
+.video-item {
+cursor: pointer;
+}
+
+/* Hover effect for tablet and PC */
+.video-item:hover {
+transform: scale(1.05); /* Slightly enlarges the video item */
+box-shadow: 0 8px 25px rgba(0, 255, 255, 0.3); /* Adds a subtle glow */
+z-index: 10; /* Ensures it appears above other items during hover */
+}
+}
+
+.video-embed {
+width: 100%;
+border: none;
+display: block;
+aspect-ratio: 16 / 9;
+}
+
+.video-description {
+padding: 10px 15px;
+text-align: center;
+}
+
+.video-description p {
+margin: 4px 0;
+}
+
+.video-title {
+font-family: 'Abel';
+color: #32E5FF;
+text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+font-size: 20px;
+font-style: italic;
+}
+
+.video-subtitle {
+font-family: 'Abel';
+color: #ECECEC;
+text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+font-size: 15px;
+}
+</style>
+</head>
+<body>
+
+<div class="video-gallery">
+
+<div class="video-item">
+<iframe class="video-embed" src="https://drive.google.com/file/d/10iKAzgiyFE2j7zmEJrkeC8aKNsaqWnKQ/preview" allowfullscreen></iframe>
+<div class="video-description">
+<p class="video-title">Neon Genesis Evangelion AMV</p>
+<p class="video-subtitle">Music: Spiritbox - Yellowjacket</p>
+</div>
+</div>
+
+<div class="video-item">
+<iframe class="video-embed" src="https://drive.google.com/file/d/14XrlABZ_xvuoMojLGcGrknHht6gsgNVV/preview" allowfullscreen></iframe>
+<div class="video-description">
+<p class="video-title">Above My Enemy Music Visualizer</p>
+<p class="video-subtitle">Music: Above My Enemy - Realm Of Chaos</p>
+</div>
+</div>
+
+<div class="video-item">
+<iframe class="video-embed" src="https://drive.google.com/file/d/1zhlMAqct7i5V-qUfjk8G_pDpuBgebmDc/preview" allowfullscreen></iframe>
+<div class="video-description">
+<p class="video-title">Spirit Urge Music Visualizer</p>
+<p class="video-subtitle">Music: Spirit Urge - JRPG Sampler 1</p>
+</div>
+</div>
+
+<div class="video-item">
+<iframe class="video-embed" src="https://drive.google.com/file/d/1oC02za8YCyE-dSx9MqOzJ9fFJMbntXf7/preview" allowfullscreen></iframe>
+<div class="video-description">
+<p class="video-title">Cretlaw</p>
+<p class="video-subtitle">TikTok Example</p>
+</div>
+</div>
+
+</div>
+
+</body>
+</html>
+
+
+=======================================================================
+
+
+13 - Reactive Video Collage STREAM ASSETS
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asset Gallery</title>
+<link href="https://fonts.googleapis.com/css2?family=Abel&display=swap" rel="stylesheet">
+<style>
+body {
+background-color: #1a1a1a;
+margin: 0;
+font-family: 'Abel', sans-serif;
+}
+
+/* Renamed from .video-gallery */
+.asset-gallery {
+display: flex;
+flex-wrap: wrap;
+justify-content: center;
+gap: 20px;
+padding: 20px;
+margin-top: 100px;
+}
+
+/* Renamed from .video-item */
+.asset-card {
+background-color: #2b2b2b;
+border-radius: 4px;
+overflow: hidden;
+box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+display: flex;
+flex-direction: column;
+flex: 0 1 320px;
+transition: all 0.4s ease-in-out;
+}
+
+@media (min-width: 769px) {
+.asset-gallery {
+margin-top: 0;
+}
+.asset-card {
+cursor: pointer;
+}
+
+/* Hover effect for tablet and PC */
+.asset-card:hover {
+transform: scale(1.05); /* Slightly enlarges the item */
+box-shadow: 0 8px 25px rgba(0, 255, 255, 0.3); /* Adds a glow */
+z-index: 10;
+}
+}
+
+/* Renamed from .video-embed */
+.asset-preview {
+width: 100%;
+border: none;
+display: block;
+aspect-ratio: 16 / 9;
+}
+
+/* Renamed from .video-description */
+.asset-info {
+padding: 10px 15px;
+text-align: center;
+}
+
+.asset-info p {
+margin: 4px 0;
+}
+
+/* Renamed from .video-title */
+.asset-title {
+font-family: 'Abel';
+color: #32E5FF;
+text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+font-size: 20px;
+font-style: italic;
+}
+
+/* Renamed from .video-subtitle */
+.asset-subtitle {
+font-family: 'Abel';
+color: #ECECEC;
+text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+font-size: 15px;
+}
+</style>
+</head>
+<body>
+
+<div class="asset-gallery">
+
+<div class="asset-card">
+<iframe class="asset-preview" src="https://drive.google.com/file/d/15I6F41TfZmHGd2l9Y74qEiptmBFMlQnl/preview" allowfullscreen></iframe>
+<div class="asset-info">
+<p class="asset-title">Cyberpunk 2077 Themed Green Screen</p>
+<p class="asset-subtitle">Male V - Stinger (Waiting)</p>
+</div>
+</div>
+
+<div class="asset-card">
+<iframe class="asset-preview" src="https://drive.google.com/file/d/1BDEKs4UGdZ03tjK7WY_42POSvz_pCd7s/preview" allowfullscreen></iframe>
+<div class="asset-info">
+<p class="asset-title">Cyberpunk 2077 Themed Orange Screen</p>
+<p class="asset-subtitle">Female V - Stinger (Waiting)</p>
+</div>
+</div>
+
+<div class="asset-card">
+<iframe class="asset-preview" src="https://drive.google.com/file/d/1pSIqZDec3Gr5vLb2iFXVa37lphK1YOdu/preview" allowfullscreen></iframe>
+<div class="asset-info">
+<p class="asset-title">Cyberpunk 2077 Themed</p>
+<p class="asset-subtitle">Stream Offline</p>
+</div>
+</div>
+
+<div class="asset-card">
+<iframe class="asset-preview" src="https://drive.google.com/file/d/1iUI5EbqI4Kjy5Ah8cCndZX4pg5cTnZko/preview" allowfullscreen></iframe>
+<div class="asset-info">
+<p class="asset-title">Cyberpunk 2077 Themed</p>
+<p class="asset-subtitle">Stinger Slider Transition</p>
+</div>
+</div>
+
+</div>
+
+</body>
+</html>
+
+
+=====================================================================
+
+
+14 - Tagwall Nav Accordion (prices list part 1)
+
+
+<style>
+
+/* --- Existing Font Imports --- */
+
+@import url('https://fonts.googleapis.com/css2?family=Abel&display=swap');
+
+/* --- Main navigation container (No changes) --- */
+
+#celestial-navigation {
+
+display: flex;
+
+flex-direction: column;
+
+position: relative;
+
+z-index: 100;
+
+}
+
+/* --- Individual navigation buttons (Spacing and Text Shadow) --- */
+
+.star-link {
+
+font-family: 'MangaMasterBB-BoldItal';
+
+/* Increased vertical margin for wider, even gaps */
+
+margin: 5px 0;
+
+text-align: center;
+
+color: #F6F6F6;
+
+text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.9);
+
+background-color: #1A1A24;
+
+cursor: pointer;
+
+padding: 10px;
+
+width: 100%;
+
+border: none;
+
+outline: none;
+
+/* Added font-size to transition for smooth text growth */
+
+transition: background-color 0.4s, color 0.4s, font-size 0.3s ease-in-out;
+
+border-radius: 0;
+
+font-size: 1.5rem;
+
+position: relative;
+
+display: flex;
+
+align-items: center;
+
+justify-content: center;
+
+overflow: visible;
+
+}
+
+/* Hover State - Text gets larger */
+
+.star-link:hover {
+
+background-color: #ddd;
+
+color: black;
+
+font-size: 1.6rem; /* Slightly larger text */
+
+}
+
+.star-link.nova-active {
+
+background-color: #32E5FF;
+
+color: #1A1A24;
+
+font-size: 1.5rem;
+
+}
+
+/* --- Left/Right Fading Marker Icons (Final Positioning) --- */
+
+.nav-marker-icon-left, .nav-marker-icon-right {
+
+opacity: 0;
+
+position: absolute;
+
+top: 50%;
+
+/* Base vertical alignment */
+
+transform: translateY(-70%);
+
+width: 25px;
+
+height: 25px;
+
+/* Added filter and transform to transition */
+
+transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out, filter 0.3s;
+
+pointer-events: none;
+
+z-index: 2;
+
+filter: drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.9));
+
+}
+
+/* Horizontal Positioning: Uses JS-calculated --text-width */
+
+.nav-marker-icon-left {
+
+left: calc(50% - (var(--text-width) / 2) - 12.5px - 35px);
+
+}
+
+.nav-marker-icon-right {
+
+right: calc(50% - (var(--text-width) / 2) - 12.5px - 35px);
+
+}
+
+/* FIX: Marker Icons on Hover - White Color, Breathing Animation Added */
+
+.star-link:hover .nav-marker-icon-left {
+
+opacity: 1;
+
+filter: invert(100%) drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.9));
+
+/* NEW FIX: Apply dedicated breathing animation for hover */
+
+animation: breathe-on-hover-left 1s infinite alternate ease-in-out;
+
+}
+
+.star-link:hover .nav-marker-icon-right {
+
+opacity: 1;
+
+filter: invert(100%) drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.9));
+
+/* NEW FIX: Apply dedicated breathing animation for hover */
+
+animation: breathe-on-hover-right 1s infinite alternate ease-in-out;
+
+}
+
+/* --- Styles for Active Button Icons (Blue/Breathing) --- */
+
+.star-link.nova-active .nav-marker-icon-left,
+
+.star-link.nova-active .nav-marker-icon-right {
+
+opacity: 1;
+
+/* Reverts to blue glow when active */
+
+filter: drop-shadow(0 0 5px #32E5FF) drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.9));
+
+}
+
+/* Apply different animations for INWARD/OUTWARD breathing (Active State) */
+
+.star-link.nova-active .nav-marker-icon-left {
+
+animation: breathe-in-out-left-final 1.5s infinite alternate ease-in-out;
+
+}
+
+.star-link.nova-active .nav-marker-icon-right {
+
+animation: breathe-in-out-right-final 1.5s infinite alternate ease-in-out;
+
+}
+
+/* Keyframe Animations */
+
+/* NEW: Keyframe for Hover Breathing (Outward movement) */
+
+@keyframes breathe-on-hover-left {
+
+0% { transform: translateY(-70%) translateX(0px); }
+
+100% { transform: translateY(-70%) translateX(-2px); } /* Moves 2px OUTWARD (left) */
+
+}
+
+@keyframes breathe-on-hover-right {
+
+0% { transform: translateY(-70%) translateX(0px); }
+
+100% { transform: translateY(-70%) translateX(2px); } /* Moves 2px OUTWARD (right) */
+
+}
+
+/* Keyframes for Active Breathing (Inward movement) */
+
+@keyframes breathe-in-out-left-final {
+
+0% { transform: translateY(-70%) translateX(0px); }
+
+50% { transform: translateY(-70%) translateX(3px); } /* Left icon moves 3px RIGHT (INWARD) */
+
+100% { transform: translateY(-70%) translateX(0px); }
+
+}
+
+@keyframes breathe-in-out-right-final {
+
+0% { transform: translateY(-70%) translateX(0px); }
+
+50% { transform: translateY(-70%) translateX(-3px); } /* Right icon moves 3px LEFT (INWARD) */
+
+100% { transform: translateY(-70%) translateX(0px); }
+
+}
+
+</style>
+
+<div id="celestial-navigation">
+
+<button class="star-link" data-target="digitalArt">
+
+<img class="nav-marker-icon-left" src="https://i.imgur.com/ar5wbxj.png" alt="Left Marker">
+
+Digital Art
+
+<img class="nav-marker-icon-right" src="https://i.imgur.com/uJguEWG.png" alt="Right Marker">
+
+</button>
+
+<button class="star-link" data-target="animation">
+
+<img class="nav-marker-icon-left" src="https://i.imgur.com/ar5wbxj.png" alt="Left Marker">
+
+Animation
+
+<img class="nav-marker-icon-right" src="https://i.imgur.com/uJguEWG.png" alt="Right Marker">
+
+</button>
+
+<button class="star-link" data-target="vtuber">
+
+<img class="nav-marker-icon-left" src="https://i.imgur.com/ar5wbxj.png" alt="Left Marker">
+
+V-Tuber Modeling
+
+<img class="nav-marker-icon-right" src="https://i.imgur.com/uJguEWG.png" alt="Right Marker">
+
+</button>
+
+<button class="star-link" data-target="videoEditing">
+
+<img class="nav-marker-icon-left" src="https://i.imgur.com/ar5wbxj.png" alt="Left Marker">
+
+Video Editing
+
+<img class="nav-marker-icon-right" src="https://i.imgur.com/uJguEWG.png" alt="Right Marker">
+
+</button>
+
+<button class="star-link" data-target="streamKit">
+
+<img class="nav-marker-icon-left" src="https://i.imgur.com/ar5wbxj.png" alt="Left Marker">
+
+Stream Kit
+
+<img class="nav-marker-icon-right" src="https://i.imgur.com/uJguEWG.png" alt="Right Marker">
+
+</button>
+
+<button class="star-link" data-target="logoDesign">
+
+<img class="nav-marker-icon-left" src="https://i.imgur.com/ar5wbxj.png" alt="Left Marker">
+
+Logo Design
+
+<img class="nav-marker-icon-right" src="https://i.imgur.com/uJguEWG.png" alt="Right Marker">
+
+</button>
+
+<button class="star-link" data-target="webDesign">
+
+<img class="nav-marker-icon-left" src="https://i.imgur.com/ar5wbxj.png" alt="Left Marker">
+
+Web Design
+
+<img class="nav-marker-icon-right" src="https://i.imgur.com/uJguEWG.png" alt="Right Marker">
+
+</button>
+
+</div>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+
+const starLinks = document.querySelectorAll('.star-link');
+
+const firstLink = starLinks[0];
+
+// --- Marker Icon Positioning Logic ---
+
+function updateMarkerPositions() {
+
+starLinks.forEach(link => {
+
+let textContent = '';
+
+link.childNodes.forEach(node => {
+
+if (node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0) {
+
+textContent += node.textContent.trim() + ' ';
+
+}
+
+});
+
+textContent = textContent.trim();
+
+if (textContent.length > 0) {
+
+const span = document.createElement('span');
+
+span.style.visibility = 'hidden';
+
+span.style.position = 'absolute';
+
+span.style.fontSize = getComputedStyle(link).fontSize;
+
+span.style.fontFamily = getComputedStyle(link).fontFamily;
+
+span.textContent = textContent;
+
+document.body.appendChild(span);
+
+const textWidth = span.offsetWidth;
+
+document.body.removeChild(span);
+
+link.style.setProperty('--text-width', `${textWidth}px`);
+
+}
+
+});
+
+}
+
+// --- Initial Setup and Events ---
+
+function sendMessage(target) {
+
+window.parent.postMessage({ starTarget: target }, '*');
+
+}
+
+starLinks.forEach(link => {
+
+link.addEventListener('click', function() {
+
+starLinks.forEach(otherLink => otherLink.classList.remove('nova-active'));
+
+this.classList.add('nova-active');
+
+const target = this.getAttribute('data-target');
+
+sendMessage(target);
+
+});
+
+});
+
+if (firstLink) {
+
+firstLink.classList.add('nova-active');
+
+const initialTarget = firstLink.getAttribute('data-target');
+
+sendMessage(initialTarget);
+
+}
+
+updateMarkerPositions();
+
+window.addEventListener('resize', updateMarkerPositions);
+
+});
+
+</script>
+
+
+=========================================================================
+
+15 - Tagwall Pages Section (prices list part 2)
+
+
+
+<style>
+
+#nova-content-display {
+
+width: 100%;
+
+display: flex;
+
+justify-content: center;
+
+align-items: center;
+
+overflow: hidden;
+
+transition: height 0.35s ease-in-out;
+
+}
+
+#nova-content-display iframe {
+
+width: 1200px;
+
+height: 100%;
+
+border: none;
+
+}
+
+</style>
+
+<div id="nova-content-display"></div>
+
+<script>
+
+const contentContainer = document.getElementById("nova-content-display");
+
+function updateContent(targetId) {
+
+let iframeSrc = '';
+
+let contentHeight = '560px';
+
+switch(targetId) {
+
+case 'digitalArt':
+
+iframeSrc = 'https://crprices.carrd.co/#pdigitalart';
+
+contentHeight = '560px';
+
+break;
+
+case 'animation':
+
+iframeSrc = 'https://crprices.carrd.co/#panimation';
+
+contentHeight = '520px';
+
+break;
+
+case 'vtuber':
+
+iframeSrc = 'https://crprices.carrd.co/#pvtuber';
+
+contentHeight = '420px';
+
+break;
+
+case 'videoEditing':
+
+iframeSrc = 'https://crprices.carrd.co/#pve';
+
+contentHeight = '460px';
+
+break;
+
+case 'streamKit':
+
+iframeSrc = 'https://crprices.carrd.co/#pstreamkit';
+
+contentHeight = '450px';
+
+break;
+
+case 'logoDesign':
+
+iframeSrc = 'https://crprices.carrd.co/#pld';
+
+contentHeight = '420px';
+
+break;
+
+case 'webDesign':
+iframeSrc = 'https://crprices.carrd.co/#pwsd';
+contentHeight = '440px';
+break;
+
+}
+
+if (iframeSrc) {
+
+contentContainer.style.height = contentHeight;
+
+// --- The ONLY change is adding scrolling="no" to the iframe tag below ---
+
+contentContainer.innerHTML = `<iframe title="${targetId}-frame" src="${iframeSrc}" scrolling="no"></iframe>`;
+
+}
+
+}
+
+window.addEventListener("message", function (event) {
+
+if (event.data && event.data.starTarget) {
+
+updateContent(event.data.starTarget);
+
+}
+
+});
+
+window.addEventListener('DOMContentLoaded', (event) => {
+
+updateContent('digitalArt');
+
+});
+
+</script>
+
+
+==========================================================================
+
+
+16 - Info Example under products
+
+
+<div style="display: flex; justify-content: center; align-items: center; text-align: center; gap: 100px; flex-wrap: wrap;">
+<!-- Left side -->
+<div style="flex: 0 1 auto; min-width: 150px;">
+<p style="margin: 0; font-family: 'Abel'; color: #32E5FF; text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5); font-size: 16px;">
+<em><strong>DESCRIPTION</strong></em>
+</p>
+<p style="margin: 0; font-family: 'Abel'; color: #F6F6F6; text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5); font-size: 16px;">
+<strong>Messy artwork for character conceptualization. Great for those on a budget.</strong>
+</p>
+<p style="margin: 0; font-family: 'Abel'; color: #32E5FF; text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5); font-size: 12px;">
+<em>Charged per character.</em>
+Increase <strong>Quantity</strong> to add more characters.
+</p>
+</div>
+
+<!-- Right side -->
+<div style="flex: 0 1 auto; min-width: 150px;">
+<p style="font-family: 'Abel'; color: #F6F6F6; text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5); font-size: 16px;">
+<strong>Please specify your purchase</strong><br>
+State your purchase in the message box.<br>
+I'll respond to confirm. Thank you!
+</p>
+</div>
+</div>
+
+<!-- Optional media query for extra-small screens -->
+<style>
+@media (max-width: 500px) {
+div[style*="display: flex"] {
+flex-direction: column;
+text-align: center;
+}
+}
+</style>
+
+
+============================================================================
+
+
+17 - ADD TO CART + VIEW CART BUTTONS
+
+
+<span class="buynow-button" onclick="addToCart(1)">ADD TO CART</span>
+<span class="viewcart-button" onclick="openCartModal()">VIEW CART</span>
+
+
+===========================================================================
+
+
+18 - Font Callback
+
+
+<style>
+/* Fonts by Crux Riajuu */
+@font-face {
+font-family: 'RampageBrush';
+src: url('https://dl.dropboxusercontent.com/scl/fi/sq59ngrh2k9icwcvo5jnu/RampageBrush.ttf?rlkey=r4vei1f19o508axvhggp41tcv') format('truetype');
+}
+
+@font-face {
+font-family: 'CruxComicHand';
+src: url('https://dl.dropboxusercontent.com/scl/fi/vhtsmighevbpd3jvg6vav/CruxComicHand.ttf?rlkey=l5dtu0bullyiij5fybiq1k03l') format('truetype');
+}
+
+@font-face {
+font-family: 'CruxHand-Regular';
+src: url('https://dl.dropboxusercontent.com/scl/fi/vvk7kbcbepq2hgzk9judp/CruxHand-Regular.ttf?rlkey=ex9d990k7b3fok5l1avz895f7') format('truetype');
+}
+
+@font-face {
+font-family: 'Authority-Distressed';
+src: url('https://dl.dropboxusercontent.com/scl/fi/myirxzgre5dzee4eg8hag/Authority-Distressed.ttf?rlkey=3lwpo71ybkbsrpijmws8uy7eo') format('truetype');
+}
+
+@font-face {
+font-family: 'Authority-DistressedItalic';
+src: url('https://dl.dropboxusercontent.com/scl/fi/6ettoih411zersng8oqpo/Authority-DistressedItalic.ttf?rlkey=gafzqv56ns7brgrzr2v2ais85') format('truetype');
+}
+
+@font-face {
+font-family: 'Authority-Italic';
+src: url('https://dl.dropboxusercontent.com/scl/fi/qbuffyxsyxdxnae9kyata/Authority-Italic.ttf?rlkey=s2ge4e19iu9q8udgjh0zov557') format('truetype');
+}
+
+@font-face {
+font-family: 'Authority-Regular';
+src: url('https://dl.dropboxusercontent.com/scl/fi/18xx22ll3pjxaqokzzmvl/Authority-Regular.ttf?rlkey=ililj9rlx27yjipfirr50jjjt') format('truetype');
+}
+
+@font-face {
+font-family: 'Authority-Rounded';
+src: url('https://dl.dropboxusercontent.com/scl/fi/dd0yvsrnmr723rwo8kqym/Authority-Rounded.ttf?rlkey=zyj24klgrhpx5d63utlir23dp') format('truetype');
+}
+
+@font-face {
+font-family: 'Authority-RoundedItalic';
+src: url('https://dl.dropboxusercontent.com/scl/fi/t9hwjsbepmo9uzy40drvh/Authority-RoundedItalic.ttf?rlkey=bs7jaaheoa14bgoxd4fgw32j8') format('truetype');
+}
+
+@font-face {
+font-family: 'Autom-Bold';
+src: url('https://dl.dropboxusercontent.com/scl/fi/6bbku5hm0qkhsd7ip8ttc/Autom-Bold.ttf?rlkey=zfud9kkjnobk0ou0xfo3e2bsc') format('truetype');
+}
+
+@font-face {
+font-family: 'Bebal-Bold';
+src: url('https://dl.dropboxusercontent.com/scl/fi/rmwk4k1bq61fyyvqwjg5s/Bebal-Bold.ttf?rlkey=tnb9h3n5sfwwstuqwouo344f1') format('truetype');
+}
+
+@font-face {
+font-family: 'Bison-Bold';
+src: url('https://dl.dropboxusercontent.com/scl/fi/v3jyvc9dc02chky6tal5i/Bison-Bold.ttf?rlkey=iz3fsbdbdnkgbmyx7xhsjtsiq') format('truetype');
+}
+
+@font-face {
+font-family: 'CyberSocial-Regular';
+src: url('https://dl.dropboxusercontent.com/scl/fi/di9hkcvazltxue0b50j63/CyberSocial-Regular.ttf?rlkey=cq7ha06do1qv4turs98ibd7a7') format('truetype');
+}
+
+@font-face {
+font-family: 'Excluded-z8XrX';
+src: url('https://dl.dropboxusercontent.com/scl/fi/vhspl676wqvl16jh3fr21/Excluded-z8XrX.ttf?rlkey=vgm0u4v391x2p61dky0itikto') format('truetype');
+}
+
+@font-face {
+font-family: 'Excludeditalic-jEr99';
+src: url('https://dl.dropboxusercontent.com/scl/fi/s4h50ckijp9njroozhzzf/Excludeditalic-jEr99.ttf?rlkey=7cezucbr046qvumjfea1ocxk9') format('truetype');
+}
+
+@font-face {
+font-family: 'Friza-Bold';
+src: url('https://dl.dropboxusercontent.com/scl/fi/8spbujm28taqz481y3l4l/Friza-Bold.ttf?rlkey=m7662nluta63epkvzrw34q2d2') format('truetype');
+}
+
+@font-face {
+font-family: 'Friza';
+src: url('https://dl.dropboxusercontent.com/scl/fi/13fxqt19crjn6rlkghtsu/Friza.ttf?rlkey=72nqnuharizc1euaeqn1ftkky') format('truetype');
+}
+
+@font-face {
+font-family: 'Genesys';
+src: url('https://dl.dropboxusercontent.com/scl/fi/v9rjvtn2h3bao36fj1qam/Genesys.ttf?rlkey=ro8woszupdxajgel5ikp4z8do') format('truetype');
+}
+
+@font-face {
+font-family: 'HaleyHand-Regular';
+src: url('https://dl.dropboxusercontent.com/scl/fi/06zm3x3uepxztk7oaj11t/HaleyHand-Regular.ttf?rlkey=uvvlhnly329ktqxl74luo263d') format('truetype');
+}
+
+@font-face {
+font-family: 'MangaMasterBB_ital';
+src: url('https://dl.dropboxusercontent.com/scl/fi/a22a4up2wd4qam4ozou9g/MangaMasterBB_ital.ttf?rlkey=anpmcxndfbr60bhw4nl0vxb59') format('truetype');
+}
+
+@font-face {
+font-family: 'MangaMasterBB_reg';
+src: url('https://dl.dropboxusercontent.com/scl/fi/h3ijs8uigxzd8ujke7r2v/MangaMasterBB_reg.ttf?rlkey=49dj6la2k8qg7qyyj7hllvlm2') format('truetype');
+}
+
+@font-face {
+font-family: 'MangaMasterBB-Bold';
+src: url('https://dl.dropboxusercontent.com/scl/fi/1vp8frb39r076h241mr2j/MangaMasterBB-Bold.ttf?rlkey=zg773hm1zg0zsq3dbvxxlozx9') format('truetype');
+}
+
+@font-face {
+font-family: 'MangaMasterBB-BoldItal';
+src: url('https://dl.dropboxusercontent.com/scl/fi/e6ljdfmjxxangimvjsx2c/MangaMasterBB-BoldItal.ttf?rlkey=086ds4l169tgpv69blnb9lta5') format('truetype');
+}
+@font-face {
+font-family: 'AdinaOutlined';
+src: url('https://dl.dropboxusercontent.com/scl/fi/4p96x6if1munu926nmviq/AdinaOutlined.ttf?rlkey=r4xdwazu9e5dctlzeotsnqdub') format('truetype');
+}
+
+@font-face {
+font-family: 'AdinaRegular';
+src: url('https://dl.dropboxusercontent.com/scl/fi/x9bmu7sborsohg919xni6/AdinaRegular.ttf?rlkey=r04u2rmyet9zs2ka2xwexmzqp') format('truetype');
+}
+
+@font-face {
+font-family: 'ZippyScratchHand-Regular';
+src: url('https://dl.dropboxusercontent.com/scl/fi/1g3e5vs17gs181wtfynrt/ZippyScratchHand-Regular.ttf?rlkey=349qxtkb006lregbbbhz2nnag') format('truetype');
+}
+
+</style>
+
+
+============================================================================
+
+
+19 - Music Player
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abel&display=swap">
+<style>
+body {
+background-color: #1a1a1a;
+min-height: 100vh;
+}
+#musicplaylist {
+display: none;
+}
+#musicplayer {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+margin: 0 auto;
+box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+width: 300px;
+height: 65px;
+overflow: hidden;
+position: relative;
+}
+#highlightBox {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 50px;
+background: rgba(0,0,0,0.5);
+z-index: -1;
+}
+#musictitle-container {
+width: 100%;
+height: 100%;
+overflow: hidden;
+position: relative;
+padding: 10px;
+border-radius: 5px;
+display: flex;
+flex-direction: column;
+justify-content: space-between;
+align-items: center;
+}
+#musictitle {
+display: none;
+color: #31E5FF;
+font-family: 'CruxHand-Regular', 'Abel', sans-serif;
+white-space: nowrap;
+position: absolute;
+top: -5px;
+font-size: 26px;
+width: 100%;
+}
+.marquee {
+display: inline-block;
+white-space: nowrap;
+width: max-content;
+line-height: 1.5;
+}
+#musiccontrols {
+display: flex;
+justify-content: center;
+align-items: flex-end;
+margin-top: 20px;
+}
+.speaker, .playpause, .next, .prev, .fastforward, .rewind, .random {
+cursor: pointer;
+background: linear-gradient(to bottom, #011f2a, #01131a, #000000);
+color: #fff;
+border: none;
+border-radius: 5px;
+padding: 4px;
+font-size: 16px;
+margin-bottom: 3px;
+margin-left: 1px;
+margin-right: 1px;
+position: relative;
+transition: transform 0.2s ease;
+box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+.speaker i, .playpause i, .next i, .prev i, .fastforward i, .rewind i, .random i {
+font-size: 14px;
+transition: color 0.3s ease, text-shadow 0.3s ease, transform 0.3s ease;
+text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+.speaker:hover i, .playpause:hover i, .next:hover i, .prev:hover i, .fastforward:hover i, .rewind:hover i, .random:hover i {
+color: #00b9e5;
+text-shadow: 0 0 10px #00b9e5;
+transform: scale(1.1);
+}
+.speaker:active, .playpause:active, .next:active, .prev:active, .fastforward:active, .rewind:active, .random:active {
+transform: scale(0.95);
+box-shadow: 0 1px 2px rgba(0, 0, 0, 0.7) inset;
+}
+.volume-container {
+display: none;
+}
+
+.custom-tooltip {
+display: none;
+position: fixed;
+background: rgba(0,0,0,0.9);
+backdrop-filter: blur(8px);
+border: 1px solid #00b9e5;
+color: #fff;
+font-family: 'Abel', sans-serif;
+font-size: 12px;
+padding: 2px 4px;
+border-radius: 3px;
+white-space: nowrap;
+z-index: 9999;
+transition: opacity 0.3s ease;
+opacity: 0;
+pointer-events: none;
+}
+
+@keyframes scrollText {
+0% { transform: translateX(calc(100% + 10px)); }
+100% { transform: translateX(calc(-100% - 10px)); }
+}
+
+/* --- MOBILE FIX: Disable Tooltips on Touch Devices --- */
+@media (hover: none) {
+.custom-tooltip { display: none !important; }
+}
+</style>
+</head>
+<body>
+<div id="musicplayer">
+<div id="highlightBox"></div>
+<div id="musictitle-container">
+<div id="musictitle"><span class="marquee" id="currentSongTitle"></span></div>
+<div id="musiccontrols">
+<button class="rewind" data-tooltip="Skim Backward (0.5s)"><i class="fas fa-angle-double-left"></i></button>
+<button class="prev" data-tooltip="Previous Track"><i class="fas fa-backward"></i></button>
+<button class="playpause" data-tooltip="Play/Pause Track"><i class="fas fa-play"></i></button>
+<button class="next" data-tooltip="Next Track"><i class="fas fa-forward"></i></button>
+<button class="fastforward" data-tooltip="Skim Forward (0.5s)"><i class="fas fa-angle-double-right"></i></button>
+<button class="random" data-tooltip="Toggle Random/Sequential Playlist"><i class="fas fa-random"></i></button>
+<button class="speaker" data-tooltip="Mute/Unmute Audio"><i class="fas fa-volume-up"></i></button>
+</div>
+</div>
+<audio id="musicsrc">
+<source src="https://dl.dropboxusercontent.com/scl/fi/r00ecru60czwms75519dr/Skeleton-Punchers.wav?rlkey=506p7uxpq9fcxojfddgixgjq0&st=l1e00654" type="audio/wav">
+</audio>
+<div id="musicplaylist"></div>
+</div>
+
+<div id="dynamicTooltip" class="custom-tooltip"></div>
+
+<script>
+// --- JavaScript Functions for Dynamic Scrolling ---
+function calculateMarqueeDuration(titleElement) {
+const textWidth = titleElement.offsetWidth;
+const containerWidth = document.querySelector('#musictitle-container').offsetWidth;
+const totalDistance = textWidth + containerWidth;
+const scrollSpeed = 40;
+const duration = totalDistance / scrollSpeed;
+return Math.max(duration, 5);
+}
+
+function resetMarquee(titleEl) {
+titleEl.style.animation = 'none';
+titleEl.offsetWidth;
+titleEl.style.animation = `scrollText ${calculateMarqueeDuration(titleEl)}s linear infinite`;
+titleEl.style.animationPlayState = 'running';
+}
+// --- End Dynamic Scrolling Functions ---
+
+let playlist = [
+{ title: "Skeleton Punchers - This is a very long song title to properly test the scrolling functionality.", url: "https://dl.dropboxusercontent.com/scl/fi/r00ecru60czwms75519dr/Skeleton-Punchers.wav?rlkey=506p7uxpq9fcxojfddgixgjq0&st=l1e00654" }
+];
+let currentSongIndex = 0;
+let skimInterval = null;
+let isRandom = true;
+
+const audio = document.querySelector('#musicsrc');
+const playBtn = document.querySelector('#musicplayer .playpause');
+const titleEl = document.querySelector('#currentSongTitle');
+const titleContainer = document.querySelector('#musictitle');
+const tooltipElement = document.getElementById('dynamicTooltip');
+let tooltipTimeout;
+
+function showTooltip(button, text) {
+clearTimeout(tooltipTimeout);
+
+const rect = button.getBoundingClientRect();
+tooltipElement.innerText = text;
+
+tooltipElement.style.left = `${rect.left + rect.width / 2}px`;
+tooltipElement.style.top = `${rect.bottom + 5}px`;
+
+tooltipElement.style.transform = `translateX(-50%)`;
+
+tooltipElement.style.display = 'block';
+tooltipElement.style.opacity = '1';
+}
+
+function hideTooltip() {
+tooltipElement.style.opacity = '0';
+
+tooltipTimeout = setTimeout(() => {
+if (tooltipElement.style.opacity === '0') {
+tooltipElement.style.display = 'none';
+}
+}, 300);
+}
+
+window.onload = async function() {
+const nextBtn = document.querySelector('#musicplayer .next');
+const prevBtn = document.querySelector('#musicplayer .prev');
+const fastforwardBtn = document.querySelector('#musicplayer .fastforward');
+const rewindBtn = document.querySelector('#musicplayer .rewind');
+const randomBtn = document.querySelector('#musicplayer .random');
+const speakerBtn = document.querySelector('#musicplayer .speaker');
+
+if (!audio || !playBtn || !nextBtn || !prevBtn || !fastforwardBtn || !rewindBtn || !randomBtn || !speakerBtn || !titleEl || !titleContainer) {
+titleEl.innerText = 'Player initialization failed';
+return;
+}
+
+try {
+const response = await fetch('https://raw.githubusercontent.com/CruxRiajuu/carrd-assets/main/playlist.json');
+if (response.ok) {
+playlist = await response.json();
+currentSongIndex = Math.floor(Math.random() * playlist.length);
+}
+} catch (e) {
+console.error('Failed to fetch playlist:', e);
+}
+
+audio.src = playlist[currentSongIndex].url;
+titleEl.innerText = playlist[currentSongIndex].title;
+audio.volume = 1.0;
+
+document.querySelectorAll('#musiccontrols button').forEach(button => {
+button.addEventListener('mouseenter', () => {
+showTooltip(button, button.dataset.tooltip);
+});
+button.addEventListener('mouseleave', hideTooltip);
+});
+
+playBtn.addEventListener('click', () => playpause());
+nextBtn.addEventListener('click', () => playNext());
+prevBtn.addEventListener('click', () => playPrev());
+fastforwardBtn.addEventListener('pointerdown', startFastForward);
+fastforwardBtn.addEventListener('pointerup', stopSkim);
+fastforwardBtn.addEventListener('pointerleave', stopSkim);
+rewindBtn.addEventListener('pointerdown', startRewind);
+rewindBtn.addEventListener('pointerup', stopSkim);
+rewindBtn.addEventListener('pointerleave', stopSkim);
+randomBtn.addEventListener('click', toggleRandom);
+speakerBtn.addEventListener('click', () => toggleMute());
+
+audio.addEventListener('ended', () => playNext());
+
+/* MARQUEE START/STOP */
+audio.addEventListener('pause', () => {
+playBtn.innerHTML = '<i class="fas fa-play"></i>';
+titleEl.style.animationPlayState = 'paused';
+});
+audio.addEventListener('play', () => {
+titleContainer.style.display = 'block';
+playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+titleEl.style.animation = `scrollText ${calculateMarqueeDuration(titleEl)}s linear infinite`;
+titleEl.style.animationPlayState = 'running';
+});
+};
+
+function playpause() {
+if (audio.paused || audio.ended) {
+audio.play().catch(e => {
+playBtn.innerHTML = '<i class="fas fa-play"></i>';
+});
+titleContainer.style.display = 'block';
+
+if (titleEl.style.animation === 'none' || titleEl.style.animation === '') {
+titleEl.style.animation = `scrollText ${calculateMarqueeDuration(titleEl)}s linear infinite`;
+}
+titleEl.style.animationPlayState = 'running';
+titleEl.innerText = playlist[currentSongIndex].title;
+} else {
+audio.pause();
+}
+}
+
+function playNext() {
+if (playlist.length === 0) return;
+if (isRandom) {
+currentSongIndex = Math.floor(Math.random() * playlist.length);
+} else {
+currentSongIndex = (currentSongIndex + 1) % playlist.length;
+}
+audio.src = playlist[currentSongIndex].url;
+titleEl.innerText = playlist[currentSongIndex].title;
+
+resetMarquee(titleEl);
+
+audio.play().catch(e => {
+titleEl.innerText = 'Error: ' + playlist[currentSongIndex].title;
+});
+titleContainer.style.display = 'block';
+}
+
+function playPrev() {
+if (playlist.length === 0) return;
+if (isRandom) {
+currentSongIndex = Math.floor(Math.random() * playlist.length);
+} else {
+currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
+}
+audio.src = playlist[currentSongIndex].url;
+titleEl.innerText = playlist[currentSongIndex].title;
+
+resetMarquee(titleEl);
+
+audio.play().catch(e => {
+titleEl.innerText = 'Error: ' + playlist[currentSongIndex].title;
+});
+titleContainer.style.display = 'block';
+}
+
+function startFastForward() {
+if (!audio || audio.paused) return;
+stopSkim();
+skimInterval = setInterval(() => {
+audio.currentTime = Math.min(audio.currentTime + 0.5, audio.duration);
+}, 100);
+}
+
+function startRewind() {
+if (!audio || audio.paused) return;
+stopSkim();
+skimInterval = setInterval(() => {
+audio.currentTime = Math.max(audio.currentTime - 0.5, 0);
+}, 100);
+}
+
+function stopSkim() {
+if (skimInterval) {
+clearInterval(skimInterval);
+skimInterval = null;
+}
+}
+
+function toggleRandom() {
+const randomBtn = document.querySelector('#musicplayer .random');
+if (!randomBtn) return;
+isRandom = !isRandom;
+randomBtn.innerHTML = isRandom ? '<i class="fas fa-random"></i>' : '<i class="fas fa-list"></i>';
+}
+
+function toggleMute() {
+const speakerIcon = document.querySelector('#musicplayer .speaker i');
+if (!audio || !speakerIcon) return;
+audio.muted = !audio.muted;
+speakerIcon.className = audio.muted ? 'fas fa-volume-mute' : 'fas fa-volume-up';
+}
+</script>
+</body>
+</html>
+
+
+==================================================================================
+
+
+20 - Cart Modal Logic 1 of 2
+
+
+<script src="https://js.stripe.com/v3/"></script>
+<script src="https://www.paypal.com/sdk/js?client-id=AUvRiSi6edPOgFdzxWGHQ-nXM6bCXwNWbi5ctTB8P03cfEieNiBRDtAAvJeRaZQYlMdiG9Eggj8MMOLf&currency=USD&intent=capture&components=buttons&enable-funding=paypal&disable-funding=card,credit"></script>
+
+<style>
+:root {
+--c-accent: #40c4ff;
+--c-accent-glow: rgba(64,196,255,0.8);
+--c-bg: #121212;
+--c-surface: #1e1e1e;
+--c-text: #ffffff;
+--font-stack: 'Myriad Pro', system-ui, -apple-system, sans-serif;
+}
+
+/* --- ANIMATIONS --- */
+@keyframes shine-sweep {
+0% { left: -100%; opacity: 0; } 20% { opacity: 1; } 100% { left: 200%; opacity: 0; }
+}
+@keyframes fadeIn { to { opacity: 1; } }
+
+/* LED Pulse */
+@keyframes beam-pulse {
+0% { opacity: 0.5; filter: drop-shadow(0 0 5px var(--c-accent)); }
+50% { opacity: 1; filter: drop-shadow(0 0 20px var(--c-accent)); }
+100% { opacity: 0.5; filter: drop-shadow(0 0 5px var(--c-accent)); }
+}
+
+/* --- BUTTON STYLES --- */
+.buynow-button, .viewcart-button, #cruxcheckout, #stripe-shell, #paypal-shell {
+background: linear-gradient(145deg, #1e1e1e, #161616) !important;
+color: var(--c-accent) !important;
+border: 1px solid #333 !important;
+border-left: 3px solid var(--c-accent) !important;
+border-right: 3px solid var(--c-accent) !important;
+font-family: var(--font-stack) !important; font-weight: 700 !important;
+text-transform: uppercase !important; letter-spacing: 0.05em !important;
+border-radius: 4px !important;
+cursor: pointer !important; box-shadow: 0 4px 10px rgba(0,0,0,0.5) !important;
+transition: all 0.1s ease-out !important;
+position: relative !important; overflow: hidden !important;
+user-select: none !important;
+}
+
+.buynow-button:active, .viewcart-button:active, #cruxcheckout:active, #stripe-shell:active {
+transform: scale(0.98) translateY(2px) !important;
+box-shadow: 0 0 5px var(--c-accent-glow) !important;
+filter: brightness(0.8) !important;
+}
+
+/* SITE BUTTONS (Normal Width) */
+.buynow-button, .viewcart-button {
+padding: 14px 30px !important;
+display: inline-flex !important;
+align-items: center !important; justify-content: center !important;
+width: auto !important; margin: 5px !important;
+}
+
+/* MODAL BUTTONS (Full Width) */
+/* FIXED: Removed !important from display so JS can hide it */
+#cruxcheckout, #stripe-shell, #paypal-shell {
+width: 100% !important;
+display: flex; /* removed !important here */
+align-items: center !important; justify-content: center !important;
+height: 45px !important; margin-bottom: 12px !important;
+}
+
+#cruxcheckout { background: var(--c-accent) !important; color: #000 !important; border: none !important; }
+
+/* FLASH LAYER */
+.buynow-button::after, .viewcart-button::after, #cruxcheckout::after, #stripe-shell::after, #paypal-shell::after {
+content: '' !important; position: absolute !important; top: 0 !important; left: -100% !important;
+width: 50% !important; height: 100% !important;
+background: linear-gradient(90deg, transparent, rgba(64,196,255,0.9), transparent) !important;
+transform: skewX(-20deg) !important; pointer-events: none !important;
+}
+
+/* HOVER STATES */
+.buynow-button:hover, .viewcart-button:hover, #stripe-shell:hover, #paypal-shell:hover {
+background: #252525 !important; border-color: var(--c-accent) !important;
+color: #fff !important; box-shadow: 0 0 20px var(--c-accent-glow) !important; transform: translateY(-2px) !important;
+}
+#cruxcheckout:hover { background: #fff !important; box-shadow: 0 0 30px var(--c-accent-glow) !important; }
+
+.buynow-button:hover::after, .viewcart-button:hover::after, #cruxcheckout:hover::after, #stripe-shell:hover::after, #paypal-shell:hover::after {
+animation: shine-sweep 0.5s ease-in-out forwards !important;
+}
+
+/* --- MODAL STRUCTURE --- */
+.crux-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(5px); z-index: 99999; justify-content: center; align-items: center; opacity: 0; animation: fadeIn 0.2s forwards; }
+
+.crux-modal {
+background: var(--c-bg); width: 94%; max-width: 500px;
+min-height: 350px;
+border-radius: 16px; border: 1px solid #333;
+box-shadow: 0 20px 80px rgba(0,0,0,0.9);
+display: flex; flex-direction: column;
+max-height: 90vh; position: relative; overflow: hidden;
+transition: height 0.3s ease;
+}
+
+#closebtn { position: absolute; top: 15px; right: 20px; background: none; border: none; color: #555; font-size: 2.5rem; line-height: 1; cursor: pointer; transition: 0.2s; z-index: 10; }
+#closebtn:hover { color: var(--c-accent); transform: scale(1.1); }
+
+/* --- HEADER & LEDS --- */
+.crux-header { padding: 30px 30px 10px; position: relative; }
+.crux-header-row { display: flex; justify-content: center; align-items: center; margin-bottom: 25px; position: relative; }
+.crux-header h2 { color: #fff; font-family: var(--font-stack); font-size: 1.8rem; font-weight: 800; letter-spacing: 0.1em; margin: 0; text-shadow: 0 0 15px rgba(64,196,255,0.4); }
+
+#cruxclear { position: absolute; right: 35px; top: 5px; background: transparent; border: 1px solid #553333; color: #ff5555; font-size: 0.7rem; font-weight: 800; padding: 4px 8px; border-radius: 4px; cursor: pointer; transition: 0.2s; letter-spacing: 0.05em; }
+#cruxclear:hover { background: #ff5555; color: #fff; box-shadow: 0 0 20px rgba(255, 0, 0, 0.8); }
+
+/* --- LED STRIP --- */
+.crux-line {
+height: 3px; background: transparent; width: 100%; position: relative; overflow: visible;
+display: flex; justify-content: center; align-items: center;
+}
+.led-left, .led-right {
+position: absolute; top: 0; bottom: 0; width: 55%;
+animation: beam-pulse 2s infinite ease-in-out;
+}
+.led-left {
+right: 50%;
+background: linear-gradient(to left, var(--c-accent) 0%, var(--c-accent) 20%, transparent 100%);
+}
+.led-right {
+left: 50%;
+background: linear-gradient(to right, var(--c-accent) 0%, var(--c-accent) 20%, transparent 100%);
+}
+
+/* --- BODY & ITEMS --- */
+.crux-body { padding: 20px 30px; overflow-y: auto; flex-grow: 1; }
+#cruxempty { text-align: center; color: #888; padding: 40px 0; font-size: 1.1rem; }
+
+.crux-item { background: var(--c-surface); border: 1px solid #2a2a2a; padding: 15px; margin-bottom: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+.crux-item:hover { border-color: #444; box-shadow: 0 0 15px rgba(64,196,255,0.1); }
+.crux-item-info strong { display: block; color: #fff; font-size: 1rem; margin-bottom: 4px; }
+.crux-item-info span { color: var(--c-accent); font-size: 0.85rem; font-weight: 600; }
+
+.qty-group { display: flex; gap: 8px; align-items: center; background: #161616; padding: 4px; border-radius: 6px; }
+.qty-btn { background: #333; color: #fff; border: none; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+.qty-btn:hover { background: var(--c-accent); color: #000; }
+.qty-del { background: transparent; color: #666; width: auto; padding: 0 5px;}
+.qty-del:hover { color: #ff4444; background: transparent; }
+
+/* --- FOOTER --- */
+.crux-footer { background: #161616; padding: 25px 30px; border-top: 1px solid #222; }
+
+#main-total-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; transition: opacity 0.3s; }
+#main-total-row span:first-child { color: #888; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.1em; }
+#main-total-row span:last-child { color: #fff; font-size: 2rem; font-weight: 800; line-height: 1; text-shadow: 0 0 15px rgba(64,196,255,0.3); }
+
+/* --- PAYMENT AREA --- */
+#cruxpay { display: none; margin-top: 0px; height: 100%; flex-direction: column; justify-content: center; }
+
+#cruxback { width: 100%; background: transparent; color: #666; border: 1px solid #333; padding: 10px; border-radius: 6px; font-weight: 700; font-size: 0.9rem; cursor: pointer; margin-bottom: 15px; transition: 0.2s; }
+#cruxback:hover { color: #fff; border-color: #666; background: #222; }
+#cruxback:active { transform: scale(0.98); }
+
+#stripego, #paypalgo {
+width: 92% !important; height: 36px !important;
+background: linear-gradient(145deg, #2a2a2a, #1a1a1a) !important;
+border-radius: 4px !important;
+display: flex; justify-content: center; align-items: center;
+cursor: pointer; border: none !important;
+}
+#stripego:hover, #paypalgo:hover { background: #333 !important; }
+#stripe-img { height: 22px; width: auto; filter: brightness(0) invert(1) drop-shadow(0 0 2px rgba(255,255,255,0.5)); }
+
+#stripe-shell, #paypal-shell { width: 100% !important; height: 45px !important; margin-bottom: 12px; }
+
+/* --- TOAST & CONFIRM --- */
+#cruxtoast { position: fixed; bottom: 30px; right: 30px; z-index: 999999; display: flex; flex-direction: column; gap: 10px; align-items: flex-end; pointer-events: none; }
+.crux-toast-msg { background: #1e1e1e; border-left: 4px solid var(--c-accent); color: #fff; padding: 16px 24px; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-family: var(--font-stack); font-size: 0.95rem; animation: slideIn 0.3s ease; position: relative; overflow: hidden; }
+.crux-toast-msg::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(64,196,255,0.4), transparent); transform: skewX(-20deg); animation: shine-sweep 1s ease-in-out forwards; }
+@keyframes slideIn { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+#crux-confirm-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+.crux-confirm-box { background: #1a1a1a; border: 1px solid #ff4444; border-radius: 12px; padding: 30px; text-align: center; max-width: 300px; box-shadow: 0 0 50px rgba(255,0,0,0.3); animation: fadeIn 0.2s; }
+.crux-confirm-box h3 { color: #fff; margin: 0 0 10px; font-size: 1.4rem; font-family: var(--font-stack); }
+.crux-confirm-box p { color: #aaa; margin: 0 0 20px; font-size: 0.9rem; }
+.confirm-actions { display: flex; gap: 10px; justify-content: center; }
+.confirm-btn { padding: 10px 20px; border-radius: 6px; border: none; font-weight: 800; cursor: pointer; }
+.btn-no { background: #333; color: #fff; } .btn-no:hover { background: #444; }
+.btn-yes { background: #ff4444; color: #fff; box-shadow: 0 0 15px rgba(255,68,68,0.4); } .btn-yes:hover { background: #ff2222; box-shadow: 0 0 25px rgba(255,68,68,0.6); }
+</style>
+
+<div id="cruxcart" class="crux-overlay" onclick="event.target===this&&closeCruxCart()">
+<div class="crux-modal">
+<button id="closebtn" onclick="closeCruxCart()">×</button>
+<div class="crux-header">
+<div class="crux-header-row">
+<h2>YOUR CART</h2>
+<button id="cruxclear">CLEAR</button>
+</div>
+<div class="crux-line">
+<div class="led-left"></div>
+<div class="led-right"></div>
+</div>
+</div>
+
+<div class="crux-body" id="main-cart-body">
+<div id="cruxitems"></div>
+<div id="cruxempty">Cart is empty</div>
+</div>
+
+<div class="crux-body" id="cruxpay" style="display:none;">
+<div style="margin-top:20px;">
+<div id="stripe-shell">
+<button id="stripego">
+<img id="stripe-img" src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" alt="Stripe">
+</button>
+</div>
+<div id="paypal-shell">
+<div id="paypalgo"></div>
+</div>
+<button id="cruxback">← BACK TO ITEMS</button>
+</div>
+</div>
+
+<div class="crux-footer">
+<div class="crux-total-row" id="main-total-row"><span>TOTAL</span><span id="cruxtotal">$0.00</span></div>
+<button id="cruxcheckout">PROCEED TO CHECKOUT</button>
+</div>
+</div>
+</div>
+
+<div id="crux-confirm-overlay">
+<div class="crux-confirm-box">
+<h3>CLEAR CART?</h3>
+<p>This will remove all items.</p>
+<div class="confirm-actions">
+<button class="confirm-btn btn-no" onclick="closeConfirm()">CANCEL</button>
+<button class="confirm-btn btn-yes" onclick="confirmClear()">CLEAR</button>
+</div>
+</div>
+</div>
+<div id="cruxtoast"></div>
+
+
+============================================================================
+
+
+
+21 - CART MODAL LOGIC 2 of 2
+
+
+<script>
+(function () {
+'use strict';
+
+const STRIPE_KEY = 'pk_live_51OHfwcIaRpVk2G5N78UiDGdQLFzmUh1dv6bbA0D4N4I5bK2n7mPruCL8YpY10RuhIImCOJka8aikchX9RAi017k100KJUWJMK7';
+const JSON_URL = 'https://raw.githubusercontent.com/CruxRiajuu/carrd-store-data/main/digital_products.json';
+
+const allCarts = document.querySelectorAll('#cruxcart');
+if(allCarts.length > 1) allCarts[0].remove();
+
+let cart = [], products = [], checkoutOpen = false;
+let stripe;
+try { stripe = Stripe(STRIPE_KEY); } catch(e) { console.error("Stripe Error", e); }
+
+const getEl = (id) => document.getElementById(id);
+
+// --- VIEW SWITCHING ---
+const toggleCheckoutView = (isCheckout) => {
+const itemsBody = getEl('main-cart-body');
+const payBody = getEl('cruxpay');
+const total = getEl('main-total-row');
+const btn = getEl('cruxcheckout');
+const clear = getEl('cruxclear');
+
+if(isCheckout) {
+// Hide Items & Total
+if(itemsBody) itemsBody.style.display = 'none';
+if(total) total.style.display = 'none';
+if(clear) clear.style.display = 'none';
+
+// FORCE HIDE CHECKOUT BUTTON
+if(btn) btn.style.setProperty('display', 'none', 'important');
+
+// Show Payment
+if(payBody) {
+payBody.style.display = 'flex';
+payBody.style.opacity = '0';
+setTimeout(() => { payBody.style.opacity = '1'; }, 50);
+}
+} else {
+// Restore Items & Total
+if(payBody) payBody.style.display = 'none';
+
+if(itemsBody) {
+itemsBody.style.display = 'block';
+itemsBody.style.opacity = '0';
+setTimeout(() => { itemsBody.style.opacity = '1'; }, 50);
+}
+if(total) total.style.display = 'flex';
+if(clear) clear.style.display = 'block';
+if(btn) btn.style.setProperty('display', 'block', 'important');
+}
+checkoutOpen = isCheckout;
+};
+
+// --- CORE FUNCTIONS ---
+window.openCartModal = function() {
+const modal = getEl('cruxcart');
+if(modal) { modal.style.display = 'flex'; render(); }
+};
+
+window.closeCruxCart = function() {
+const modal = getEl('cruxcart');
+if(modal) {
+modal.style.display = 'none';
+toggleCheckoutView(false);
+}
+};
+
+window.addToCart = async function(id) {
+if(!products || products.length === 0) {
+toastMsg("Initializing store...");
+try {
+const res = await fetch(JSON_URL);
+products = await res.json();
+} catch(e) {
+return toastMsg("Error loading products.");
+}
+}
+const p = products.find(x => x.id === id);
+if(!p) return toastMsg('Item not found');
+const ex = cart.find(x => x.id === id);
+if(ex) { ex.qty++; } else { cart.push({...p, qty:1}); }
+save(); render(); toastMsg(`<strong>${p.name}</strong><br>added to cart`);
+};
+
+window.changeQty = function(id, delta) {
+const item = cart.find(x => x.id === id);
+if(!item) return;
+item.qty += delta;
+if(item.qty <= 0) cart = cart.filter(x => x.id !== id);
+save(); render();
+};
+
+window.closeConfirm = function() { getEl('crux-confirm-overlay').style.display = 'none'; }
+window.confirmClear = function() { cart = []; save(); render(); getEl('crux-confirm-overlay').style.display = 'none'; }
+
+const toastMsg = (msg) => {
+const box = getEl('cruxtoast');
+if(!box) return;
+const t = document.createElement('div');
+t.className = 'crux-toast-msg';
+t.innerHTML = msg;
+box.appendChild(t);
+setTimeout(()=>{ t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 3000);
+};
+
+const save = () => localStorage.setItem('crux2025', JSON.stringify(cart));
+const load = () => { cart = JSON.parse(localStorage.getItem('crux2025')||'[]'); render(); };
+
+const render = () => {
+const itemsEl = getEl('cruxitems');
+const totalEl = getEl('cruxtotal');
+const emptyEl = getEl('cruxempty');
+const clearBtn = getEl('cruxclear');
+const checkBtn = getEl('cruxcheckout');
+
+if(!itemsEl) return;
+
+itemsEl.innerHTML = '';
+const sumCents = cart.reduce((s,i) => s + i.price * i.qty, 0);
+totalEl.textContent = '$' + (sumCents/100).toFixed(2);
+
+if(cart.length === 0) {
+emptyEl.style.display = 'block';
+if(checkBtn) checkBtn.style.display = 'none';
+if(clearBtn) clearBtn.style.display = 'none';
+} else {
+emptyEl.style.display = 'none';
+if(!checkoutOpen) {
+if(clearBtn) clearBtn.style.display = 'block';
+if(checkBtn) checkBtn.style.display = 'block';
+}
+
+cart.forEach(i => {
+itemsEl.innerHTML += `
+<div class="crux-item">
+<div class="crux-item-info">
+<strong>${i.name}</strong>
+<span>$${(i.price/100).toFixed(2)}</span>
+</div>
+<div class="qty-group">
+<button class="qty-btn" onclick="changeQty(${i.id},-1)">-</button>
+<span style="color:#fff;font-size:0.9rem;min-width:20px;text-align:center;">${i.qty}</span>
+<button class="qty-btn" onclick="changeQty(${i.id},1)">+</button>
+<button class="qty-btn qty-del" onclick="changeQty(${i.id},-999)">×</button>
+</div>
+</div>`;
+});
+}
+};
+
+fetch(JSON_URL).then(r=>r.json()).then(p=>{ products=p; load(); }).catch(e=>console.log("JSON Load Error", e));
+
+const clearBtn = getEl('cruxclear');
+if(clearBtn) clearBtn.onclick = () => { getEl('crux-confirm-overlay').style.display = 'flex'; };
+
+const backBtn = getEl('cruxback');
+if(backBtn) backBtn.onclick = () => { toggleCheckoutView(false); };
+
+const checkoutBtn = getEl('cruxcheckout');
+if(checkoutBtn) checkoutBtn.onclick = () => {
+if(cart.length === 0) return;
+toggleCheckoutView(true);
+
+const ppDiv = getEl('paypalgo');
+if(!ppDiv.innerHTML) {
+try {
+paypal.Buttons({
+fundingSource: paypal.FUNDING.PAYPAL,
+style: {
+layout:'vertical',
+color:'black',
+shape:'rect',
+label:'paypal',
+height: 36
+},
+createOrder:(d,a)=>{
+let calcTotal = 0;
+const ppItems = cart.map(item => {
+let cat = item.category ? item.category.replace(/-/g, ' ').toUpperCase() : "ITEM";
+let name = `[${cat}] ${item.name}`;
+if(name.length > 127) name = name.substring(0, 124) + "...";
+const price = (item.price/100).toFixed(2);
+calcTotal += parseFloat(price) * item.qty;
+return { name: name, description: cat, quantity: String(item.qty), unit_amount: { currency_code: "USD", value: price }, category: "DIGITAL_GOODS" };
+});
+const totalStr = calcTotal.toFixed(2);
+return a.order.create({purchase_units:[{amount:{currency_code:"USD",value:totalStr,breakdown:{item_total:{currency_code:"USD",value:totalStr}}},items:ppItems}]});
+},
+onApprove:(d,a)=>{
+return a.order.capture().then(details => {
+const bName = details.payer.name.given_name;
+const bEmail = details.payer.email_address;
+alert('Payment Successful!\n\nBuyer: ' + bName + '\nEmail: ' + bEmail + '\n\nWe will contact you shortly.');
+cart=[]; save(); render(); window.closeCruxCart();
+});
+},
+onError: err => { console.error(err); alert("PayPal Error"); }
+}).render('#paypalgo');
+} catch(e) { console.error("PayPal Init Error", e); }
+}
+};
+
+const stripeBtn = getEl('stripego');
+if(stripeBtn) stripeBtn.onclick = async () => {
+if(cart.length === 0) return;
+const lineItems = cart.map(item => ({ price: item.stripe_price_id, quantity: item.qty }));
+const {error} = await stripe.redirectToCheckout({ lineItems: lineItems, mode: 'payment', successUrl: window.location.href + '?success=true', cancelUrl: window.location.href });
+if(error) alert(error.message);
+};
+
+if(window.location.search.includes('success=true')){
+cart=[]; save(); render();
+toastMsg("Payment Successful!<br>Cart Cleared.");
+window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+})();
+</script>
+
+
+============================================================================
+
+
+22 - Firebase Master 1 of 6
+
+
+<style>
+/* --- 1. VARIABLES --- */
+:root { --c-accent: #40c4ff; --c-err: #ff4444; --c-bg: #121212; --c-surface: #1e1e1e; --font-stack: 'Myriad Pro', sans-serif; }
+
+/* --- 2. Z-INDEX SUPREMACY --- */
+#firebase-modal-overlay, .firebase-modal, #dashboard-ui, #user-dropdown, #cyber-toast-container {
+z-index: 2147483647 !important;
+}
+
+/* --- 3. MODAL BASE --- */
+#firebase-modal-overlay {
+position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(10px); display: none;
+}
+
+.firebase-modal {
+position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+background: linear-gradient(145deg, #1e1e1e, #121212);
+border: 1px solid #333; border-left: 2px solid var(--c-accent); border-right: 2px solid var(--c-accent);
+padding: 40px; width: 90%; max-width: 420px; display: none; font-family: var(--font-stack);
+box-shadow: 0 20px 80px rgba(0,0,0,0.9); border-radius: 6px; overflow: hidden;
+}
+
+/* LED STRIP */
+@keyframes beam-pulse { 0% { opacity: 0.5; filter: drop-shadow(0 0 5px var(--c-accent)); } 50% { opacity: 1; filter: drop-shadow(0 0 20px var(--c-accent)); } 100% { opacity: 0.5; filter: drop-shadow(0 0 5px var(--c-accent)); } }
+.modal-led-strip { height: 2px; width: 100%; position: absolute; top: 0; left: 0; display: flex; justify-content: center; }
+.led-L, .led-R { position: absolute; top: 0; bottom: 0; width: 55%; animation: beam-pulse 2s infinite ease-in-out; }
+.led-L { right: 50%; background: linear-gradient(to left, var(--c-accent) 0%, var(--c-accent) 20%, transparent 100%); }
+.led-R { left: 50%; background: linear-gradient(to right, var(--c-accent) 0%, var(--c-accent) 20%, transparent 100%); }
+
+/* --- 4. UI ELEMENTS --- */
+.firebase-modal h3 { color: #fff; margin: 0 0 10px; text-transform: uppercase; letter-spacing: 2px; font-size: 1.6rem; text-align: center; text-shadow: 0 0 15px rgba(64,196,255,0.4); }
+
+.firebase-modal p { color: #ccc; text-align: center; font-size: 0.9rem; margin-bottom: 20px; line-height: 1.4; }
+
+.firebase-modal input[type="email"],
+.firebase-modal input[type="password"],
+.firebase-modal input[type="text"],
+.firebase-modal select {
+width: 100%; padding: 14px; margin-bottom: 12px; border: 1px solid #333;
+background: #0a0a0a; color: #fff; font-family: monospace; font-size: 13px;
+outline: none; border-radius: 4px;
+}
+.firebase-modal input:focus, .firebase-modal select:focus { border-color: var(--c-accent); box-shadow: 0 0 15px rgba(64,196,255,0.2); }
+
+/* NSFW TOGGLE STYLE */
+.nsfw-box {
+display: flex; align-items: flex-start; gap: 12px;
+background: #0f0f0f; border: 1px solid #333; padding: 12px;
+margin-bottom: 15px; border-radius: 4px;
+}
+.nsfw-box input { width: 18px !important; height: 18px; margin: 3px 0 0 0; cursor: pointer; accent-color: #ff4444; }
+.nsfw-box label { color: #fff; font-size: 0.9rem; cursor: pointer; font-weight: bold; }
+.nsfw-box span { display: block; color: #666; font-size: 0.75rem; font-weight: normal; margin-top: 2px; }
+
+.cyber-btn { width: 100%; padding: 14px; margin-top: 5px; background: linear-gradient(145deg, #1e1e1e, #161616); border: 1px solid #333; border-left: 2px solid var(--c-accent); border-right: 2px solid var(--c-accent); color: var(--c-accent); cursor: pointer; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; transition: 0.1s; border-radius: 4px; }
+.cyber-btn:hover { background: #fff; color: #000; box-shadow: 0 0 25px rgba(64,196,255,0.6); border-color: #fff; }
+.cyber-btn:active { transform: scale(0.98) translateY(1px); }
+
+.error-message { color: #ff4444; font-size: 11px; margin-bottom: 10px; text-align: center; }
+.switch-link { margin-top: 20px; font-size: 11px; color: #666; cursor: pointer; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+.modal-close { position: absolute; top: 15px; right: 20px; color: #444; cursor: pointer; font-size: 1.5rem; }
+
+/* --- 5. DRAG & DROP ZONE --- */
+input[type="file"] { display: none; }
+.drop-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; padding: 40px 20px; margin-bottom: 5px; border: 1px dashed #444; background: #0a0a0a; border-radius: 4px; cursor: pointer; transition: 0.2s; }
+.drop-zone:hover, .drop-zone.drag-over { border-color: var(--c-accent); background: #111; box-shadow: 0 0 15px rgba(64,196,255,0.1) inset; }
+.drop-zone svg { width: 30px; height: 30px; fill: #666; margin-bottom: 10px; transition: 0.2s; }
+.drop-zone:hover svg { fill: var(--c-accent); }
+.drop-text-main { font-size: 13px; font-weight: 800; color: #ccc; letter-spacing: 1px; text-transform: uppercase; }
+.drop-text-sub { font-size: 10px; color: #666; margin-top: 5px; text-transform: uppercase; }
+
+/* PROGRESS BAR */
+.upload-progress-container { width: 100%; height: 6px; background: #222; margin-top: 15px; border-radius: 3px; overflow: hidden; opacity: 0; transition: opacity 0.2s; display: none; }
+.upload-progress-bar { height: 100%; width: 0%; background: var(--c-accent); box-shadow: 0 0 10px var(--c-accent); transition: width 0.2s ease; }
+
+/* --- 6. DASHBOARD --- */
+#dashboard-ui { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 900px; height: 80vh; background: #0f0f0f; border: 1px solid #333; display: none; flex-direction: column; box-shadow: 0 0 100px black; border-radius: 8px; overflow: hidden; }
+.dash-header { padding: 20px; background: #161616; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; position: relative; }
+.dash-user-info h2 { margin: 0; color: #fff; text-transform: uppercase; font-size: 1.2rem; }
+.dash-badge { font-size: 10px; padding: 2px 6px; border-radius: 3px; margin-left: 10px; border: 1px solid #333; text-transform: uppercase; display:inline-block; }
+
+.badge-unverified { color: #666; border-color: #666; }
+.badge-verified { color: #0f0; border-color: #0f0; background: rgba(0,255,0,0.1); }
+.badge-subscribed { color: #ffd700; border-color: #ffd700; background: rgba(255, 215, 0, 0.1); text-shadow:0 0 5px gold; }
+.badge-premium { color: #b28dff; border-color: #b28dff; background: rgba(178, 141, 255, 0.1); text-shadow:0 0 5px #b28dff; }
+
+.dash-body { display: flex; flex: 1; overflow: hidden; }
+.dash-sidebar { width: 220px; background: #121212; border-right: 1px solid #333; padding: 20px 0; }
+
+.dash-nav-btn { position: relative; display: block; width: 100%; text-align: left; padding: 15px 25px; background: transparent; border: none; color: #666; cursor: pointer; text-transform: uppercase; font-weight: bold; font-size: 11px; transition: all 0.1s ease-out; letter-spacing: 1px; border-bottom: 1px solid #1a1a1a; }
+.dash-nav-btn:active { transform: scale(0.98); background: #000; color: #fff; }
+.dash-nav-btn.active { color: #fff; background: linear-gradient(90deg, transparent, rgba(64,196,255,0.05)); text-shadow: 0 0 8px var(--c-accent); }
+.dash-nav-btn.active::after { content: ''; position: absolute; top: 0; bottom: 0; right: 0; width: 4px; background: var(--c-accent); box-shadow: -5px 0 15px var(--c-accent); animation: fadeIn 0.3s ease-out; }
+.dash-nav-btn:hover { color: #fff; padding-left: 28px; }
+
+#dash-disconnect { margin-top: 50px; color: #ff4444; }
+#dash-disconnect:hover { color: #ff0000 !important; background: linear-gradient(90deg, transparent, rgba(255, 0, 0, 0.1)); text-shadow: 0 0 10px rgba(255, 0, 0, 0.6); }
+#dash-disconnect.active::after { background: #ff0000 !important; box-shadow: -5px 0 15px #ff0000 !important; }
+
+.dash-content { flex: 1; padding: 40px; overflow-y: auto; color: #ccc; }
+.dash-content h3 { color: var(--c-accent); border-bottom: 1px solid #333; padding-bottom: 15px; margin-top: 0; text-transform: uppercase; letter-spacing: 2px; }
+
+/* --- 7. DROPDOWN --- */
+#user-dropdown { position: fixed; background: #1c1c1c; border: 1px solid #444; border-left: 2px solid var(--c-accent); display: none; min-width: 160px; box-shadow: 0 10px 30px black; }
+#user-dropdown a { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #888; padding: 12px 16px; display: block; cursor: pointer; transition: 0.2s; letter-spacing: 1px; }
+#user-dropdown a:hover { background-color: #161616; color: #fff; padding-left: 20px; }
+
+/* --- 8. CYBER TOAST --- */
+#cyber-toast-container { position: fixed; bottom: 30px; right: 30px; pointer-events: none; display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+.cyber-toast { background: #1e1e1e; border-left: 4px solid var(--c-accent); color: #fff; padding: 16px 24px; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-family: var(--font-stack); font-size: 0.95rem; position: relative; overflow: hidden; min-width: 250px; opacity: 0; transform: translateX(50px); animation: toastSlideIn 0.3s forwards ease-out; }
+.cyber-toast.error { border-color: var(--c-err); }
+.cyber-toast.success { border-color: #0f0; }
+@keyframes toastSlideIn { to { opacity: 1; transform: translateX(0); } }
+.cyber-toast::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent); transform: skewX(-20deg); animation: shine-sweep 1s ease-in-out forwards; }
+@keyframes shine-sweep { 0% { left: -100%; opacity: 0; } 20% { opacity: 1; } 100% { left: 200%; opacity: 0; } }
+</style>
+
+<div id="firebase-modal-overlay"></div>
+
+<div id="firebase-login-modal" class="firebase-modal">
+<div class="modal-led-strip"><div class="led-L"></div><div class="led-R"></div></div>
+<span class="modal-close">&times;</span>
+<h3>System Access</h3>
+<input type="email" id="login-email" placeholder="EMAIL IDENTITY">
+<input type="password" id="login-password" placeholder="PASSPHRASE">
+<div id="login-error" class="error-message"></div>
+<button id="signin-btn" class="cyber-btn">Initialize Session</button>
+<div style="text-align:center;">
+<div class="switch-link" onclick="openModal('register')">Create New Identity //</div>
+<br>
+<div class="switch-link" style="color:#444; margin-top:10px;" onclick="resetPass()">Forgot Credentials?</div>
+</div>
+</div>
+
+<div id="firebase-register-modal" class="firebase-modal">
+<div class="modal-led-strip"><div class="led-L"></div><div class="led-R"></div></div>
+<span class="modal-close">&times;</span>
+<h3>New Identity</h3>
+<input type="email" id="reg-email" placeholder="EMAIL IDENTITY">
+<input type="password" id="reg-pass" placeholder="CREATE PASSPHRASE">
+<div id="reg-error" class="error-message"></div>
+<button id="create-btn" class="cyber-btn">Establish Link</button>
+<div style="text-align:center;">
+<div class="switch-link" onclick="openModal('login')">Return to Login //</div>
+</div>
+</div>
+
+<div id="firebase-profile-modal" class="firebase-modal">
+<div class="modal-led-strip"><div class="led-L"></div><div class="led-R"></div></div>
+<h3>Identity Setup</h3>
+<p>Configure your public node data.</p>
+<input type="text" id="setup-handle" placeholder="DISPLAY HANDLE">
+
+<select id="setup-role">
+<option value="User">User / Collector</option>
+<option value="Art Connoisseur">Art Connoisseur (VIP)</option>
+<option value="Digital Artist">Digital Artist / Illustrator</option>
+<option value="Traditional Artist">Traditional Artist / Painter</option>
+<option value="2D Animator">2-D Animator</option>
+<option value="3D Animator">3-D Animator</option>
+<option value="3D Artist">3D Modeler / Sculptor</option>
+<option value="Musician">Musician / Producer</option>
+<option value="Voice Actor">Voice Actor</option>
+<option value="Video Editor">Video Editor</option>
+<option value="Web Designer">Web Designer</option>
+<option value="Photographer">Photographer</option>
+<option value="Writer">Writer / Author</option>
+<option value="Mangaka">Mangaka</option>
+<option value="Game Dev">Game Developer</option>
+</select>
+
+<div class="nsfw-box">
+<input type="checkbox" id="setup-nsfw">
+<label for="setup-nsfw">
+Enable 18+ Content (NSFW)
+<span>View or post mature content.</span>
+</label>
+</div>
+
+<button id="save-profile-btn" class="cyber-btn">Save Identity</button>
+</div>
+
+<div id="firebase-reset-modal" class="firebase-modal">
+<div class="modal-led-strip"><div class="led-L"></div><div class="led-R"></div></div>
+<h3>Reset Credentials</h3>
+<p>Enter new passphrase below.</p>
+<input type="password" id="new-password" placeholder="NEW PASSPHRASE">
+<button id="confirm-reset-btn" class="cyber-btn">Update Security</button>
+</div>
+
+<div id="dashboard-ui">
+<div class="dash-header">
+<div class="modal-led-strip" style="opacity:0.5;"><div class="led-L"></div><div class="led-R"></div></div>
+<div class="dash-user-info" id="dash-header-info"></div>
+<button onclick="closeDashboard()" style="background:none; border:none; color:#666; font-size:24px; cursor:pointer;">×</button>
+</div>
+<div class="dash-body">
+<div class="dash-sidebar">
+<button class="dash-nav-btn active" onclick="switchDashTab('purchases')">My Downloads</button>
+<button class="dash-nav-btn" onclick="switchDashTab('verify')">ID Verification</button>
+<button class="dash-nav-btn" onclick="switchDashTab('studio')">Artist Studio</button>
+<button id="dash-disconnect" class="dash-nav-btn" onclick="switchDashTab('disconnect')">Disconnect</button>
+</div>
+<div class="dash-content" id="dash-main-view"></div>
+</div>
+</div>
+
+<div id="cyber-toast-container"></div>
+
+<div id="user-dropdown">
+<a onclick="openDashboard('purchases')">Dashboard</a>
+<a onclick="doLogout()">Logout</a>
+</div>
+
+
+=============================================================================
+
+
+23 - Firebase Master 2 of 6
+
+
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+
+<script>
+// --- GLOBAL VARIABLES ---
+window.currentUserDoc = {};
+window.stagedFile = null;
+window.SUBSCRIPTION_URL = "https://buy.stripe.com/YOUR_LINK_HERE";
+
+// --- 1. FIREBASE CONFIG ---
+const firebaseConfig = {
+apiKey: "AIzaSyCqad15n5UeSl2AwnfzeIJuZLCNrVm0CrE",
+authDomain: "userportalv2.firebaseapp.com",
+projectId: "userportalv2",
+storageBucket: "userportalv2.firebasestorage.app",
+messagingSenderId: "420794125847",
+appId: "1:420794125847:web:ad75a2d5f7380934061652"
+};
+
+window.app = firebase.initializeApp(firebaseConfig);
+window.auth = firebase.auth();
+window.db = firebase.firestore();
+window.storage = firebase.storage();
+
+// --- 2. HELPERS ---
+window.sanitizeError = (message) => {
+if(message.includes('auth/email-already-in-use')) return "Identity already registered.";
+if(message.includes('auth/wrong-password')) return "Access Denied.";
+if(message.includes('auth/user-not-found')) return "Identity not found.";
+return "System Error: " + message;
+};
+
+window.showToast = (msg, type = 'normal') => {
+const box = document.getElementById('cyber-toast-container');
+if(!box) return;
+const t = document.createElement('div');
+t.className = 'cyber-toast';
+if(type === 'error') t.classList.add('error');
+if(type === 'success') t.classList.add('success');
+t.innerHTML = msg;
+box.appendChild(t);
+setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateX(50px)'; setTimeout(()=>t.remove(), 300); }, 3000);
+};
+
+// --- 3. BASIC UI HANDLERS ---
+window.openModal = (type) => {
+document.getElementById('firebase-modal-overlay').style.display = 'block';
+document.querySelectorAll('.firebase-modal').forEach(m => m.style.display = 'none');
+if(type === 'login') document.getElementById('firebase-login-modal').style.display = 'block';
+if(type === 'register') document.getElementById('firebase-register-modal').style.display = 'block';
+if(type === 'profile') document.getElementById('firebase-profile-modal').style.display = 'block';
+if(type === 'reset') document.getElementById('firebase-reset-modal').style.display = 'block';
+};
+
+window.closeAllModals = () => {
+document.getElementById('firebase-modal-overlay').style.display = 'none';
+document.querySelectorAll('.firebase-modal').forEach(m => m.style.display = 'none');
+document.getElementById('dashboard-ui').style.display = 'none';
+};
+
+// --- 4. AUTH EVENT LISTENERS ---
+document.addEventListener('DOMContentLoaded', function() {
+const overlay = document.getElementById('firebase-modal-overlay');
+if(overlay) overlay.addEventListener('click', (e) => {
+if (e.target.id === 'firebase-modal-overlay') window.closeAllModals();
+});
+
+document.querySelectorAll('.modal-close').forEach(b => b.onclick = window.closeAllModals);
+
+const createBtn = document.getElementById('create-btn');
+if(createBtn) createBtn.addEventListener('click', () => {
+const e = document.getElementById('reg-email').value;
+const p = document.getElementById('reg-pass').value;
+window.auth.createUserWithEmailAndPassword(e, p)
+.then((cred) => window.checkProfile(cred.user))
+.catch(e => document.getElementById('reg-error').textContent = window.sanitizeError(e.message));
+});
+
+const signinBtn = document.getElementById('signin-btn');
+if(signinBtn) signinBtn.addEventListener('click', () => {
+const e = document.getElementById('login-email').value;
+const p = document.getElementById('login-password').value;
+window.auth.signInWithEmailAndPassword(e, p)
+.then((cred) => {
+window.closeAllModals();
+window.checkProfile(cred.user);
+})
+.catch(e => document.getElementById('login-error').textContent = window.sanitizeError(e.message));
+});
+
+// --- SAVE IDENTITY (WITH DUPLICATE CHECK) ---
+const saveProfileBtn = document.getElementById('save-profile-btn');
+if(saveProfileBtn) saveProfileBtn.addEventListener('click', async () => {
+const u = window.auth.currentUser;
+const h = document.getElementById('setup-handle').value.trim();
+const r = document.getElementById('setup-role').value;
+const nsfw = document.getElementById('setup-nsfw').checked;
+
+if(!h) return window.showToast("Username required", "error");
+
+// 1. CHECK FOR DUPLICATES
+const snap = await window.db.collection('users').where('handle', '==', h).get();
+if(!snap.empty) {
+return window.showToast("Username Taken. Choose another.", "error");
+}
+
+// 2. SAVE IF CLEAR
+if(u) {
+await window.db.collection('users').doc(u.uid).set({
+handle: h,
+role: r,
+nsfw_enabled: nsfw,
+email: u.email,
+verified: false,
+verification_status: 'unverified',
+artist_status: 'unverified',
+subscription: 'free',
+created: new Date(),
+rejection_count: 0,
+name_changes: 0 // New field for tracking
+});
+window.closeAllModals();
+window.showToast("Identity Established. Welcome, " + h, "success");
+}
+});
+});
+
+window.checkProfile = async (user) => {
+const doc = await window.db.collection('users').doc(user.uid).get();
+if (!doc.exists) {
+window.closeAllModals();
+window.openModal('profile');
+}
+};
+
+window.resetPass = () => {
+const e = document.getElementById('login-email').value;
+if(!e) return window.showToast("Enter email address first.", "error");
+window.auth.sendPasswordResetEmail(e)
+.then(()=>window.showToast("Reset Link Sent.", "success"))
+.catch(e=>window.showToast(window.sanitizeError(e.message), "error"));
+};
+</script>
+
+
+======================================================================
+
+
+24 - Firebase Master 3 of 6
+
+
+<script>
+// --- 5. DASHBOARD VIEW LOGIC ---
+
+window.openDashboard = async (targetTab = 'purchases') => {
+const u = window.auth.currentUser;
+if(!u) return window.openModal('login');
+
+document.getElementById('user-dropdown').style.display = 'none';
+
+window.switchDashTab(targetTab);
+document.getElementById('dashboard-ui').style.display = 'flex';
+document.getElementById('firebase-modal-overlay').style.display = 'block';
+
+try {
+const doc = await window.db.collection('users').doc(u.uid).get({ source: 'server' });
+window.currentUserDoc = doc.exists ? doc.data() : { handle: "Guest", role: "User", verification_status: 'unverified' };
+
+let badgesHtml = "";
+const vStatus = window.currentUserDoc.verification_status;
+if(vStatus === 'verified') badgesHtml += `<span class="dash-badge badge-verified">VERIFIED ID</span>`;
+else if(vStatus === 'pending') badgesHtml += `<span class="dash-badge badge-unverified" style="color:#d4a017; border-color:#d4a017;">PENDING</span>`;
+else badgesHtml += `<span class="dash-badge badge-unverified">UNVERIFIED</span>`;
+
+if(window.currentUserDoc.subscription === 'subscribed') badgesHtml += ` <span class="dash-badge badge-subscribed">ARTIST PASS</span>`;
+if(window.currentUserDoc.subscription === 'premium') badgesHtml += ` <span class="dash-badge badge-premium">PREMIUM</span>`;
+
+document.getElementById('dash-header-info').innerHTML = `<h2>${window.currentUserDoc.handle}</h2><div style="margin-top:5px; color:#666; font-size:11px;">${window.currentUserDoc.role} // ${badgesHtml}</div>`;
+
+const sidebar = document.querySelector('.dash-sidebar');
+if(!document.getElementById('btn-settings')) {
+const setBtn = document.createElement('button');
+setBtn.id = 'btn-settings';
+setBtn.className = 'dash-nav-btn';
+setBtn.innerText = 'SETTINGS';
+setBtn.onclick = () => window.switchDashTab('settings');
+const discBtn = document.getElementById('dash-disconnect');
+sidebar.insertBefore(setBtn, discBtn);
+}
+
+window.switchDashTab(targetTab);
+} catch (e) { console.error(e); }
+};
+
+window.closeDashboard = () => window.closeAllModals();
+
+window.switchDashTab = (tab) => {
+const view = document.getElementById('dash-main-view');
+document.querySelectorAll('.dash-nav-btn').forEach(b => b.classList.remove('active'));
+
+if(tab === 'settings') {
+const setBtn = document.getElementById('btn-settings');
+if(setBtn) setBtn.classList.add('active');
+} else {
+const activeBtn = document.querySelector(`.dash-nav-btn[onclick*="'${tab}'"]`);
+if(activeBtn) activeBtn.classList.add('active');
+}
+
+// TAB: PURCHASES
+if(tab === 'purchases') {
+let html = `<h3>MY DOWNLOADS</h3>`;
+if(window.currentUserDoc.purchased_items && window.currentUserDoc.purchased_items.length > 0) {
+window.currentUserDoc.purchased_items.forEach(i => {
+html += `<a href="${i.link}" target="_blank" style="display:block; padding:15px; background:#121212; border:1px solid #333; margin-bottom:10px; color:#fff; text-decoration:none;">DOWNLOAD: ${i.name}</a>`;
+});
+} else { html += `<p style="color:#666; font-style:italic;">No data found.</p>`; }
+view.innerHTML = html;
+}
+
+// TAB: SETTINGS
+if(tab === 'settings') {
+const changes = window.currentUserDoc.name_changes || 0;
+const maxFree = 1;
+const remaining = maxFree - changes;
+const isFree = remaining > 0;
+
+view.innerHTML = `
+<h3>ACCOUNT SETTINGS</h3>
+<div style="background:#1a1a1a; padding:20px; border:1px solid #333; border-radius:6px;">
+<label style="display:block; color:#888; font-size:0.8rem; margin-bottom:5px;">CURRENT HANDLE</label>
+<div style="display:flex; gap:10px;">
+<input type="text" id="new-handle-input" value="${window.currentUserDoc.handle}" style="flex:1; background:#000; border:1px solid #444; color:#fff; padding:10px;">
+<button class="cyber-btn" onclick="attemptNameChange()" style="width:auto; margin:0; ${!isFree ? 'opacity:0.5; border-color:#666; color:#666;' : ''}">
+${isFree ? 'UPDATE' : 'PAY TO CHANGE'}
+</button>
+</div>
+<p style="font-size:0.8rem; color:${isFree ? '#0f0' : '#ff4444'}; margin-top:5px;">
+${isFree ? `Free changes remaining: ${remaining}` : `Free changes exhausted. Fee: $5.00`}
+</p>
+</div>
+`;
+}
+
+// TAB: ID VERIFICATION
+if(tab === 'verify') {
+const status = window.currentUserDoc.verification_status || 'unverified';
+const appeals = window.currentUserDoc.rejection_count || 0;
+const appealsLeft = 5 - appeals;
+
+if(status === 'verified') {
+view.innerHTML = `<h3>ID VERIFICATION</h3><div style="padding:30px; border:1px solid #0f0; background: rgba(0, 255, 0, 0.05); text-align:center;"><p style="color:#0f0; font-size:1.5rem; font-weight:bold; margin-bottom:10px;">ACCEPTED</p><p style="color:#aaa;">Your identity has been confirmed.</p></div><p style="color:#666; margin-top:20px; text-align:center;">You may now apply for Artist Status.</p>`;
+}
+else if(status === 'pending') {
+view.innerHTML = `<h3>VERIFICATION PENDING</h3><div style="padding:40px; border:1px solid #d4a017; background: rgba(212, 160, 23, 0.1); text-align:center;"><p style="color:#d4a017; font-weight:bold; font-size:1.2rem; margin-bottom:15px;">UNDER REVIEW</p><p style="color:#fff; font-size:0.95rem;">Your ID has been received.</p><p style="color:#aaa; font-size:0.9rem; margin-top:5px;">Please wait for an admin to accept or reject your application.</p></div>`;
+}
+else if(status === 'rejected') {
+if(appealsLeft <= 0) {
+view.innerHTML = `<h3 style="color:#ff0000;">ACCESS DENIED</h3><div style="padding:30px; border:1px solid #ff0000; background: rgba(255, 0, 0, 0.1); text-align:center;"><p style="color:#ff0000; font-weight:bold; font-size:1.2rem;">ACCOUNT PERMANENTLY REJECTED</p></div>`;
+} else {
+view.innerHTML = `<h3 style="color:#ff4444;">VERIFICATION REJECTED</h3><div style="background:#1a1a1a; padding:20px; border-left:4px solid #ff4444; margin-bottom:20px;"><p style="color:#fff; margin:0;"><strong>Reason:</strong> Your ID was unclear or invalid.</p></div><p style="color:#ff4444; font-weight:bold;">Appeals Remaining: ${appealsLeft}</p><button class="cyber-btn" onclick="retryVerify()">UPLOAD NEW ID</button>`;
+}
+} else {
+window.renderVerifyUpload(view);
+}
+}
+
+// TAB: ARTIST STUDIO
+if(tab === 'studio') {
+if(!window.currentUserDoc.verified) {
+view.innerHTML = `<h3>ARTIST STUDIO LOCKED</h3><div style="text-align:center; padding:40px; opacity:0.5;"><p style="color:#ff4444; font-size:1.2rem;">⚠ ACCESS DENIED</p><p>You must complete ID Verification first.</p></div>`; return;
+}
+
+const artistStatus = window.currentUserDoc.artist_status || 'unverified';
+const isFree = window.currentUserDoc.subscription === 'free';
+
+if(artistStatus === 'verified') {
+let uploadMsg = "Unlimited Uploads Enabled";
+let uploadColor = "#0f0";
+
+// UPDATE: Display specific constraints for Free Tier
+if(isFree) {
+uploadMsg = "FREE TIER LIMITS ACTIVE";
+uploadColor = "#d4a017";
+}
+
+view.innerHTML = `
+<h3>ARTIST STUDIO</h3>
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border:1px solid ${uploadColor}; padding:10px; background:rgba(0,0,0,0.2);">
+<div style="display:flex; flex-direction:column;">
+<span style="color:${uploadColor}; font-weight:bold; font-size:0.9rem;">${uploadMsg}</span>
+${isFree ? `<span style="color:#aaa; font-size:0.7rem; margin-top:4px;">Max 5 Items • Audio &lt;20MB • Video &lt;200MB</span>` : ''}
+</div>
+${isFree ? `<a href="${window.SUBSCRIPTION_URL}" target="_blank" style="color:#fff; font-size:0.8rem; text-decoration:underline; font-weight:bold;">UPGRADE</a>` : ''}
+</div>
+
+<button class="cyber-btn" onclick="document.getElementById('art-file-input').click()">+ UPLOAD TO PORTFOLIO</button>
+<input type="file" id="art-file-input" accept="image/*,video/*,audio/*" style="display:none;" onchange="handleArtUpload(this)">
+
+<div class="upload-progress-container" id="prog-container-art" style="margin-top:20px;"><div class="upload-progress-bar" id="prog-bar-art"></div></div>
+<p id="upload-status-art" style="margin-top:10px; color:#40c4ff; font-size:11px;"></p>
+`;
+}
+else if(artistStatus === 'pending') {
+view.innerHTML = `<h3>ARTIST VERIFICATION PENDING</h3><div style="padding:30px; border:1px solid #b28dff; background: rgba(178, 141, 255, 0.1); text-align:center;"><p style="color:#b28dff; font-weight:bold;">REVIEWING VIDEO PROOF</p><p style="color:#aaa; font-size:0.9rem;">We are analyzing your process video for AI usage.</p></div>`;
+}
+else {
+view.innerHTML = `
+<h3>ARTIST PROOF REQUIRED</h3>
+<p style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">Upload a video proving you created your work.</p>
+<div style="background:#000; padding:20px; border:1px solid #333; border-left:4px solid #b28dff; margin-bottom:20px; border-radius:6px;">
+<strong style="display:block; color:#b28dff; margin-bottom:10px; font-size:1.1rem; letter-spacing:1px;">REQUIREMENTS:</strong>
+<ul style="margin:0; padding-left:20px; color:#fff; font-size:1rem; line-height:1.6;">
+<li><strong>Digital Art:</strong> Show layers, history, & strokes.</li>
+<li><strong>Traditional:</strong> Show physical canvas & hand movement.</li>
+<li><strong>3D Art:</strong> Show wireframes & project view.</li>
+<li><strong>Music / Voice:</strong> Show DAW timeline or recording session.</li>
+<li><strong>ALL:</strong> Real-time only (NO Timelapses).</li>
+<li><strong>Max 5 Minutes (File: &lt;500MB)</strong></li>
+</ul>
+</div>
+<label for="video-file" class="drop-zone" id="drag-zone-vid">
+<svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4zM14 13h-3v3H9v-3H6v-2h3V8h2v3h3v2z"/></svg>
+<div class="drop-text-main" id="drop-text-vid">UPLOAD PROOF VIDEO</div>
+<div class="drop-text-sub">(CLICK OR DRAG VIDEO HERE)</div>
+</label>
+<input type="file" id="video-file" accept="video/*" onchange="handleVideoSelect(this)">
+<button id="transmit-btn-vid" onclick="transmitVideo()" class="cyber-btn" style="display:none;">TRANSMIT PROOF</button>
+<div class="upload-progress-container" id="prog-container-vid"><div class="upload-progress-bar" id="prog-bar-vid"></div></div>
+<p id="upload-status-vid" style="margin-top:10px; color:#40c4ff; font-size:11px;"></p>
+`;
+setTimeout(window.setupVideoDragDrop, 100);
+}
+}
+
+if(tab === 'disconnect') {
+view.innerHTML = `<h3 style="color:#ff4444; border-color:#ff4444;">TERMINATION REQUESTED</h3><div style="background:#161616; border:1px solid #333; padding:20px; text-align:center; box-shadow:0 0 30px rgba(255,0,0,0.1) inset;"><p style="color:#fff; font-size:1.1rem; font-family:monospace; margin-bottom:10px;">NEURAL LINK: <span style="color:#0f0;">ACTIVE</span></p><p style="color:#aaa; line-height:1.5;">You are attempting to sever the connection.<br>Do you wish to leave the matrix?</p><div id="disconnect-actions" style="margin-top:25px; display:flex; gap:10px; justify-content:center;"><button class="cyber-btn" onclick="closeDashboard()" style="border-color:#444; color:#aaa;">ABORT</button><button class="cyber-btn" onclick="processLogout()" style="border-color:#ff4444; color:#ff4444; background:rgba(255,0,0,0.1);">EJECT</button></div><div id="logout-sequence" style="display:none; margin-top:20px;"><p style="color:#ff4444; font-size:10px; letter-spacing:2px;">SEVERING CONNECTION...</p><div class="upload-progress-container" style="opacity:1; display:block; background:#300;"><div id="logout-bar" class="upload-progress-bar" style="background:#ff0000; width:0%; box-shadow:0 0 10px #ff0000;"></div></div></div></div>`;
+}
+};
+</script>
+
+
+=============================================================================
+
+25 - Firebase Master 4 of 6
+
+
+<script>
+// --- 6. FEATURE LOGIC & HELPERS ---
+
+// --- QUOTA CHECKER ---
+window.checkQuota = async () => {
+if(window.currentUserDoc.subscription !== 'free') return true;
+try {
+const snap = await window.db.collection('users').doc(window.auth.currentUser.uid).collection('uploads').get();
+if(snap.size >= 5) {
+window.showToast("FREE LIMIT REACHED (5/5). Upgrade to upload more.", "error");
+return false;
+}
+return true;
+} catch(e) { return false; }
+};
+
+window.attemptNameChange = async () => {
+const newHandle = document.getElementById('new-handle-input').value.trim();
+if(newHandle === window.currentUserDoc.handle) return window.showToast("No change detected.", "error");
+if(!newHandle) return window.showToast("Username cannot be empty.", "error");
+
+const changes = window.currentUserDoc.name_changes || 0;
+
+if(changes >= 1) return alert("You have used your free name change. Please pay $5 to continue (Payment Link Placeholder).");
+
+if(!confirm(`Change username to "${newHandle}"? This is your ONE free change.`)) return;
+
+try {
+const snap = await window.db.collection('users').where('handle', '==', newHandle).get();
+if(!snap.empty) return window.showToast("Username taken.", "error");
+
+await window.db.collection('users').doc(window.auth.currentUser.uid).update({
+handle: newHandle,
+name_changes: firebase.firestore.FieldValue.increment(1)
+});
+
+window.showToast("Username Updated!", "success");
+window.currentUserDoc.handle = newHandle;
+window.currentUserDoc.name_changes = (window.currentUserDoc.name_changes || 0) + 1;
+document.querySelector('#dash-header-info h2').innerText = newHandle;
+window.switchDashTab('settings');
+} catch(e) {
+window.showToast("Error: " + e.message, "error");
+}
+};
+
+window.renderVerifyUpload = (view) => {
+view.innerHTML = `
+<h3>ID VERIFICATION REQUIRED</h3>
+<p style="font-size:13px; color:#888;">Upload government ID to unlock features.</p>
+<label for="id-file" class="drop-zone" id="drag-zone">
+<svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"></path></svg>
+<div class="drop-text-main" id="drop-text">SCAN CREDENTIALS</div>
+</label>
+<input type="file" id="id-file" onchange="handleManualSelect(this)">
+<button id="transmit-btn" onclick="transmitData()" class="cyber-btn" style="display:none;">TRANSMIT DATA</button>
+<div class="upload-progress-container" id="prog-container-verify"><div class="upload-progress-bar" id="prog-bar-verify"></div></div>
+<p id="upload-status-verify" style="margin-top:10px; color:#40c4ff; font-size:11px;"></p>
+`;
+setTimeout(window.setupDragDrop, 100);
+}
+
+window.retryVerify = () => {
+window.renderVerifyUpload(document.getElementById('dash-main-view'));
+}
+
+window.processLogout = () => {
+document.getElementById('disconnect-actions').style.display = 'none';
+document.getElementById('logout-sequence').style.display = 'block';
+const bar = document.getElementById('logout-bar');
+let width = 0;
+const interval = setInterval(() => {
+if(width >= 100) {
+clearInterval(interval);
+window.showToast("DISCONNECTED.", "error");
+setTimeout(() => {
+window.auth.signOut();
+window.closeAllModals();
+location.reload();
+}, 800);
+} else {
+width += 5;
+bar.style.width = width + '%';
+}
+}, 50);
+};
+
+// --- DRAG & DROP HANDLERS ---
+window.setupDragDrop = () => {
+const dz = document.getElementById('drag-zone');
+if(!dz) return;
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+dz.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
+});
+dz.addEventListener('dragover', () => dz.style.background = '#1a1a1a');
+dz.addEventListener('dragleave', () => dz.style.background = '#0a0a0a');
+dz.addEventListener('drop', (e) => {
+dz.style.background = '#0a0a0a';
+if(e.dataTransfer.files.length > 0) {
+document.getElementById('drop-text').innerText = "ACQUIRED: " + e.dataTransfer.files[0].name;
+document.getElementById('drag-zone').style.borderColor = "#40c4ff";
+window.startUpload(e.dataTransfer.files[0], 'verification');
+}
+});
+};
+
+window.setupVideoDragDrop = () => {
+const dz = document.getElementById('drag-zone-vid');
+if(!dz) return;
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+dz.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
+});
+dz.addEventListener('dragover', () => dz.style.background = '#1a1a1a');
+dz.addEventListener('dragleave', () => dz.style.background = '#0a0a0a');
+dz.addEventListener('drop', (e) => {
+dz.style.background = '#0a0a0a';
+if(e.dataTransfer.files.length > 0) {
+document.getElementById('drop-text-vid').innerText = "VIDEO STAGED: " + e.dataTransfer.files[0].name;
+document.getElementById('drag-zone-vid').style.borderColor = "#b28dff";
+window.stagedFile = e.dataTransfer.files[0];
+}
+});
+};
+
+window.handleManualSelect = (input) => {
+if(input.files && input.files.length > 0) {
+window.stagedFile = input.files[0];
+document.getElementById('drop-text').innerText = "STAGED: " + window.stagedFile.name;
+document.getElementById('drag-zone').style.borderColor = "#40c4ff";
+document.getElementById('transmit-btn').style.display = 'block';
+}
+};
+
+window.handleVideoSelect = (input) => {
+if(input.files && input.files.length > 0) {
+window.stagedFile = input.files[0];
+document.getElementById('drop-text-vid').innerText = "VIDEO STAGED: " + window.stagedFile.name;
+document.getElementById('drag-zone-vid').style.borderColor = "#b28dff";
+document.getElementById('transmit-btn-vid').style.display = 'block';
+}
+}
+
+// --- UPDATED ART UPLOAD HANDLER ---
+window.handleArtUpload = async (input) => {
+if(input.files && input.files.length > 0) {
+// 1. Check Quota
+const allowed = await window.checkQuota();
+if(allowed) {
+window.startUpload(input.files[0], 'art_uploads');
+} else {
+input.value = '';
+}
+}
+};
+
+window.transmitData = () => {
+if(!window.stagedFile) return window.showToast("Select a file first.", "error");
+window.startUpload(window.stagedFile, 'verification');
+};
+
+window.transmitVideo = () => {
+const linkInput = document.getElementById('video-link-input');
+const linkVal = linkInput ? linkInput.value.trim() : "";
+
+if(linkVal.length > 5) {
+if(!linkVal.includes('http')) return window.showToast("Invalid URL. Must include http/https", "error");
+window.db.collection('users').doc(window.auth.currentUser.uid).set({
+artist_status: 'pending',
+artist_proof_url: linkVal
+}, { merge: true }).then(() => {
+window.currentUserDoc.artist_status = 'pending';
+window.showToast("Link Submitted!", "success");
+setTimeout(() => { window.switchDashTab('studio'); }, 1000);
+});
+return;
+}
+
+if(!window.stagedFile) return window.showToast("Please select a video or paste a link.", "error");
+window.startUpload(window.stagedFile, 'artist_proofs');
+};
+
+// --- CORE UPLOAD FUNCTION WITH FILE TYPE LIMITS ---
+window.startUpload = (file, folderName) => {
+
+// --- 1. DEFINE LIMITS ---
+let MAX_SIZE = 50 * 1024 * 1024; // Default 50MB
+let typeName = "File";
+
+// Artist Proof Video (500MB)
+if(folderName === 'artist_proofs') {
+MAX_SIZE = 500 * 1024 * 1024;
+typeName = "Proof Video";
+}
+// Portfolio Uploads (Variable)
+else if(folderName === 'art_uploads') {
+if(file.type.startsWith('audio/')) {
+MAX_SIZE = 20 * 1024 * 1024; // 20MB for Audio
+typeName = "Audio";
+} else if (file.type.startsWith('video/')) {
+MAX_SIZE = 200 * 1024 * 1024; // 200MB for Portfolio Video
+typeName = "Video";
+} else {
+MAX_SIZE = 20 * 1024 * 1024; // 20MB for Images
+typeName = "Image";
+}
+}
+
+// --- 2. CHECK LIMITS ---
+if(file.size > MAX_SIZE) {
+return window.showToast(`${typeName} too large. Max ${MAX_SIZE/(1024*1024)}MB.`, "error");
+}
+
+let statusId = 'upload-status-verify';
+let progId = 'prog-bar-verify';
+let containerId = 'prog-container-verify';
+
+if(folderName === 'art_uploads') { statusId = 'upload-status-art'; progId = 'prog-bar-art'; containerId = 'prog-container-art'; }
+if(folderName === 'artist_proofs') { statusId = 'upload-status-vid'; progId = 'prog-bar-vid'; containerId = 'prog-container-vid'; }
+
+const status = document.getElementById(statusId);
+const progContainer = document.getElementById(containerId);
+const progBar = document.getElementById(progId);
+
+if(document.getElementById('transmit-btn')) document.getElementById('transmit-btn').style.display = 'none';
+if(document.getElementById('transmit-btn-vid')) document.getElementById('transmit-btn-vid').style.display = 'none';
+
+if(status) status.innerText = "INITIALIZING UPLINK...";
+if(progContainer) { progContainer.style.display = "block"; progContainer.style.opacity = "1"; }
+if(progBar) progBar.style.width = "5%";
+
+const uid = window.auth.currentUser.uid;
+const handle = window.currentUserDoc.handle || "UnknownUser";
+const safeHandle = handle.replace(/[^a-zA-Z0-9]/g, "_");
+const newFileName = `${safeHandle}_${uid}_${file.name}`;
+
+const metadata = { customMetadata: { 'username': handle, 'uid': uid, 'original_name': file.name } };
+
+const uploadTask = window.storage.ref().child(`${folderName}/${uid}/${newFileName}`).put(file, metadata);
+
+uploadTask.on('state_changed',
+(snapshot) => {
+const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+if(progBar) progBar.style.width = progress + '%';
+if(status) status.innerText = "TRANSMITTING... " + Math.floor(progress) + "%";
+},
+(error) => {
+if(status) status.innerText = window.sanitizeError(error.message);
+if(progBar) progBar.style.backgroundColor = "#ff4444";
+window.showToast("Upload Failed.", "error");
+},
+() => {
+uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+if(status) status.innerText = "UPLOAD COMPLETE.";
+if(progBar) progBar.style.backgroundColor = "#0f0";
+
+if(folderName === 'verification') {
+status.innerText = "SAVING STATUS TO DATABASE...";
+window.db.collection('users').doc(uid).set({
+verification_status: 'pending',
+id_proof_url: downloadURL
+}, { merge: true })
+.then(() => {
+window.currentUserDoc.verification_status = 'pending';
+setTimeout(() => { window.switchDashTab('verify'); }, 1000);
+}).catch(err => {
+window.showToast("Database Error: " + err.message, "error");
+});
+}
+
+if(folderName === 'artist_proofs') {
+status.innerText = "SAVING STATUS TO DATABASE...";
+window.db.collection('users').doc(uid).set({
+artist_status: 'pending',
+artist_proof_url: downloadURL
+}, { merge: true })
+.then(() => {
+window.currentUserDoc.artist_status = 'pending';
+setTimeout(() => { window.switchDashTab('studio'); }, 1000);
+});
+}
+
+if(folderName === 'art_uploads') {
+window.db.collection('users').doc(uid).collection('uploads').add({
+url: downloadURL,
+name: newFileName,
+uploadedAt: new Date()
+});
+window.showToast("Artwork Uploaded Successfully.", "success");
+}
+});
+});
+};
+
+window.doLogout = () => {
+window.openDashboard('disconnect');
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+const profileIcon = document.querySelector('.profile-icon');
+if(profileIcon) {
+const newIcon = profileIcon.cloneNode(true);
+profileIcon.parentNode.replaceChild(newIcon, profileIcon);
+
+newIcon.addEventListener('click', async () => {
+if(window.auth.currentUser) {
+if(!window.currentUserDoc || !window.currentUserDoc.role) {
+try {
+const doc = await window.db.collection('users').doc(window.auth.currentUser.uid).get();
+if(doc.exists) window.currentUserDoc = doc.data();
+} catch(e) { console.error("Profile Fetch Error", e); }
+}
+
+const rect = newIcon.getBoundingClientRect();
+const dd = document.getElementById('user-dropdown');
+
+if(window.currentUserDoc && window.currentUserDoc.isAdmin) {
+if(!document.getElementById('admin-btn')) {
+const adminLink = document.createElement('a');
+adminLink.id = 'admin-btn';
+adminLink.innerText = "ADMIN TERMINAL";
+adminLink.style.color = "#ff4444";
+adminLink.style.borderBottom = "1px solid #333";
+adminLink.onclick = window.openAdminPanel;
+dd.insertBefore(adminLink, dd.firstChild);
+}
+}
+
+dd.style.left = (rect.right - 160) + 'px';
+dd.style.top = (rect.bottom + 15) + 'px';
+dd.style.position = 'fixed';
+dd.style.zIndex = "2147483647";
+dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+} else { window.openModal('login'); }
+});
+}
+
+window.addEventListener('click', (e) => {
+if(!e.target.closest('.profile-icon') && !e.target.closest('#user-dropdown')) {
+const dd = document.getElementById('user-dropdown');
+if(dd) dd.style.display='none';
+}
+});
+});
+</script>
+
+
+=========================================================================
+
+26 - Firebase Master 5 of 6
+
+
+<style>
+/* --- GOD MODE CONTAINER --- */
+#admin-ui {
+position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+color: #fff; z-index: 2147483647;
+display: none; /* Flex applied via JS */
+justify-content: center; align-items: center;
+font-family: 'Myriad Pro', sans-serif;
+overflow: hidden; margin: 0; padding: 0;
+}
+
+/* --- HEADER (Centered Stack) --- */
+.god-header {
+position: absolute; top: 0; left: 0; width: 100%; z-index: 100;
+height: 80px;
+background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, transparent 100%);
+display: flex; flex-direction: column;
+justify-content: center; align-items: center;
+pointer-events: none;
+}
+
+.god-header h2 {
+margin: 0; color: #ff4444; letter-spacing: 4px; font-size: 1.8rem; line-height: 1;
+text-shadow: 0 0 20px #ff4444;
+}
+.god-header .sub-title {
+color: #666; font-size: 0.7rem; letter-spacing: 8px; margin-top: 5px; font-weight: bold;
+}
+
+.god-close-btn {
+position: absolute; top: 20px; right: 30px;
+background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;
+pointer-events: auto; transition: 0.2s;
+}
+.god-close-btn:hover { color: #ff4444; transform: scale(1.1); }
+
+/* --- CAROUSEL STAGE --- */
+.god-stage {
+position: relative; width: 100%; height: 100%;
+display: flex; justify-content: center; align-items: center;
+perspective: 1500px;
+}
+
+.god-rotator-ring {
+position: relative; display: flex; justify-content: center; align-items: center;
+transform-style: preserve-3d;
+transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* --- THE DOSSIER CARD --- */
+.god-card {
+position: absolute;
+width: 400px; max-width: 90vw; height: 640px; max-height: 85vh;
+left: 50%; top: 50%; transform: translate(-50%, -50%);
+margin: 0;
+
+background: rgba(20, 20, 20, 0.95);
+border: 1px solid #444; border-top: 4px solid #444;
+box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+border-radius: 12px;
+
+display: flex; flex-direction: column;
+transition: transform 0.6s ease, opacity 0.6s ease, filter 0.3s ease, border-color 0.3s ease;
+will-change: transform, opacity;
+backdrop-filter: blur(10px);
+}
+
+.god-card.active {
+z-index: 10; opacity: 1;
+box-shadow: 0 0 50px rgba(64, 196, 255, 0.2);
+border-color: #555;
+}
+
+/* Card Internals */
+.god-card-header { padding: 20px; border-bottom: 1px solid #333; background: rgba(0,0,0,0.3); text-align: left; }
+.god-card-header h3 { margin: 0; font-size: 1.6rem; color: #fff; text-transform: uppercase; }
+.god-card-header span { color: #888; font-family: monospace; font-size: 0.8rem; }
+
+.god-card-body { flex: 1; padding: 20px; overflow-y: auto; }
+.god-media-box {
+width: 100%; height: 220px; background: #000; border: 1px solid #333; margin-bottom: 15px;
+display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.god-media-box img, .god-media-box video { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+.god-data-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; border-bottom: 1px solid #222; padding-bottom: 4px; }
+.god-label { color: #666; text-transform: uppercase; font-size: 0.75rem; }
+.god-val { color: #ccc; font-weight: bold; }
+
+/* Buttons */
+.god-actions { padding: 0; display: flex; height: 60px; border-top: 1px solid #333; }
+.god-btn { flex: 1; border: none; font-weight: 900; font-size: 1.1rem; cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 2px; }
+.god-btn:active { transform: scale(0.98); }
+
+.god-btn-reject { background: #150000; color: #ff4444; }
+.god-btn-reject:hover { background: #ff4444; color: #000; box-shadow: 0 0 30px #ff4444; }
+.god-btn-approve { background: #001500; color: #00ff00; border-left: 1px solid #333; }
+.god-btn-approve:hover { background: #00ff00; color: #000; box-shadow: 0 0 30px #00ff00; }
+
+/* Footer */
+.god-card-footer {
+padding: 10px; background: #0a0a0a; text-align: center;
+font-family: monospace; font-size: 0.7rem; color: #444;
+border-top: 1px solid #222; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;
+}
+
+/* Animations */
+@keyframes phaseOutApprove {
+0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.8; box-shadow: 0 0 100px #0f0; }
+100% { transform: translate(-50%, -1000px) scale(0.5); opacity: 0; }
+}
+@keyframes phaseOutReject {
+0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+50% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.8; box-shadow: 0 0 100px #f00; }
+100% { transform: translate(-50%, 1000px) rotate(20deg); opacity: 0; }
+}
+.phase-approve { animation: phaseOutApprove 0.6s forwards ease-in !important; z-index: 99 !important; pointer-events: none; }
+.phase-reject { animation: phaseOutReject 0.6s forwards ease-in !important; z-index: 99 !important; pointer-events: none; }
+
+/* Empty State */
+.god-empty { text-align: center; color: #444; font-size: 2rem; letter-spacing: 5px; text-transform: uppercase; animation: pulse 2s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.7; } }
+
+/* --- CUSTOM CONFIRM MODAL STYLES --- */
+#cyber-confirm-overlay {
+position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2147483650;
+display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px);
+}
+.cyber-confirm-box {
+background: #121212; border: 1px solid #444; padding: 30px;
+max-width: 400px; width: 90%; text-align: center; border-radius: 8px;
+box-shadow: 0 0 50px rgba(0,0,0,0.8); position: relative; overflow: hidden;
+animation: fadeIn 0.2s ease-out;
+}
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+.cyber-confirm-box h3 { margin: 0 0 15px; font-size: 1.4rem; color: #fff; text-transform: uppercase; letter-spacing: 2px; }
+.cyber-confirm-box p { color: #aaa; margin-bottom: 25px; line-height: 1.5; }
+.cyber-confirm-actions { display: flex; gap: 15px; justify-content: center; }
+
+.cc-btn {
+padding: 12px 25px; border: none; font-weight: bold; cursor: pointer;
+border-radius: 4px; text-transform: uppercase; letter-spacing: 1px; flex: 1;
+transition: all 0.1s ease-out;
+}
+.cc-btn:active { transform: scale(0.96); }
+
+.cc-yes { background: var(--c-accent); color: #000; box-shadow: 0 0 15px rgba(64,196,255,0.2); }
+.cc-yes:hover { background: #fff; box-shadow: 0 0 25px rgba(64,196,255,0.6); }
+.cc-no { background: #333; color: #fff; border: 1px solid #444; }
+.cc-no:hover { background: #444; border-color: #666; }
+
+/* Dynamic Border Color */
+.confirm-green { border-top: 4px solid #0f0; }
+.confirm-green .cc-yes { background: #0f0; box-shadow: 0 0 15px rgba(0,255,0,0.3); }
+.confirm-green .cc-yes:hover { background: #fff; box-shadow: 0 0 25px rgba(0,255,0,0.6); }
+
+.confirm-red { border-top: 4px solid #ff4444; }
+.confirm-red .cc-yes { background: #ff4444; color: #fff; box-shadow: 0 0 15px rgba(255,68,68,0.3); }
+.confirm-red .cc-yes:hover { background: #ff2222; box-shadow: 0 0 30px rgba(255,68,68,0.6); }
+</style>
+
+<div id="admin-ui">
+<div class="god-header">
+<h2>GOD MODE</h2>
+<div class="sub-title">TERMINAL</div>
+<button class="god-close-btn" onclick="closeAdminPanel()">×</button>
+</div>
+
+<div class="god-stage">
+<div id="god-rotator" class="god-rotator-ring"></div>
+<div id="god-empty-msg" class="god-empty" style="display:none;">SYSTEM CLEAR</div>
+</div>
+</div>
+
+<div id="cyber-confirm-overlay">
+<div class="cyber-confirm-box" id="cyber-confirm-box">
+<h3 id="cc-title">CONFIRM ACTION</h3>
+<p id="cc-msg">Are you sure?</p>
+<div class="cyber-confirm-actions">
+<button class="cc-btn cc-no" id="cc-btn-no">CANCEL</button>
+<button class="cc-btn cc-yes" id="cc-btn-yes">CONFIRM</button>
+</div>
+</div>
+</div>
+
+
+===========================================================================
+
+
+27 - Firebase Master 6 of 6
+
+
+<script>
+// --- GLOBAL ADMIN VARIABLES ---
+window.pendingList = [];
+window.rotatorIndex = 0;
+
+window.openAdminPanel = async () => {
+if(!window.currentUserDoc.isAdmin) return window.showToast("ACCESS DENIED", "error");
+document.getElementById('admin-ui').style.display = 'flex';
+document.getElementById('user-dropdown').style.display = 'none';
+await loadGodData();
+};
+
+window.closeAdminPanel = () => {
+document.getElementById('admin-ui').style.display = 'none';
+};
+
+// --- 1. LOAD DATA (SCALABLE / PRODUCTION MODE) ---
+window.loadGodData = async () => {
+const container = document.getElementById('god-rotator');
+const emptyMsg = document.getElementById('god-empty-msg');
+
+container.innerHTML = '';
+window.pendingList = [];
+window.rotatorIndex = 0;
+
+emptyMsg.style.display = 'block';
+emptyMsg.innerText = "ACCESSING MAINFRAME...";
+
+try {
+// QUERY 1: Get Pending IDs (Only downloads pending docs)
+const idSnaps = await window.db.collection('users')
+.where('verification_status', '==', 'pending')
+.limit(50) // Safety limit for batches
+.get();
+
+// QUERY 2: Get Pending Artists (Only downloads pending docs)
+const artistSnaps = await window.db.collection('users')
+.where('artist_status', '==', 'pending')
+.limit(50)
+.get();
+
+idSnaps.forEach(doc => window.pendingList.push({ id: doc.id, data: doc.data(), type: 'ID' }));
+artistSnaps.forEach(doc => window.pendingList.push({ id: doc.id, data: doc.data(), type: 'ARTIST' }));
+
+document.getElementById('god-count').innerText = window.pendingList.length;
+
+if(window.pendingList.length === 0) {
+emptyMsg.innerText = "SYSTEM CLEAR";
+emptyMsg.style.display = 'block';
+} else {
+emptyMsg.style.display = 'none';
+buildGodCards();
+updateGodCarousel();
+}
+
+} catch (e) {
+console.error("FIREBASE INDEX ERROR:", e);
+
+// --- AUTO-DIAGNOSIS FOR YOU ---
+if(e.message.includes("index")) {
+emptyMsg.innerHTML = `
+<span style="color:red">MISSING INDEX</span><br>
+<span style="font-size:0.5em; color:#aaa;">
+1. Press <strong>F12</strong> (or Right Click -> Inspect)<br>
+2. Go to "Console" Tab<br>
+3. Click the long link generated by Firebase.<br>
+4. It will build the index for you.
+</span>`;
+} else {
+emptyMsg.innerText = "SYSTEM ERROR";
+window.showToast("Error: " + e.message, "error");
+}
+}
+};
+
+// --- 2. BUILD CARDS ---
+window.buildGodCards = () => {
+const container = document.getElementById('god-rotator');
+container.innerHTML = '';
+const total = window.pendingList.length;
+
+window.pendingList.forEach((item, index) => {
+const card = document.createElement('div');
+card.className = 'god-card';
+card.id = `card-${index}`;
+
+const color = item.type === 'ID' ? '#40c4ff' : '#b28dff';
+card.style.borderTopColor = color;
+
+const proofUrl = (item.type === 'ID') ? item.data.id_proof_url : item.data.artist_proof_url;
+let mediaHtml = `<div style="color:#444;">NO MEDIA FOUND</div>`;
+
+if(proofUrl) {
+if(item.type === 'ID') {
+mediaHtml = `<a href="${proofUrl}" target="_blank"><img src="${proofUrl}"></a>`;
+} else {
+if(proofUrl.includes('firebasestorage')) {
+mediaHtml = `
+<div style="display:flex; flex-direction:column; width:100%; height:100%;">
+<video src="${proofUrl}" controls preload="metadata" style="flex:1; width:100%; object-fit:contain; background:#000;"></video>
+<a href="${proofUrl}" target="_blank" style="color:#666; font-size:0.7rem; text-align:center; padding:5px; text-decoration:underline; font-family:monospace;">[OPEN RAW FILE]</a>
+</div>`;
+} else {
+mediaHtml = `
+<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%;">
+<span style="color:#aaa; font-size:0.8rem; margin-bottom:10px; font-family:monospace;">EXTERNAL LINK</span>
+<a href="${proofUrl}" target="_blank" class="cc-btn cc-yes" style="text-decoration:none; padding:10px 20px; flex:none; background:${color}; color:#000;">OPEN LINK</a>
+</div>
+`;
+}
+}
+}
+
+let joinDate = "Unknown";
+if(item.data.created && item.data.created.toDate) joinDate = item.data.created.toDate().toLocaleDateString();
+
+card.innerHTML = `
+<div class="god-card-header" style="border-bottom:1px solid ${color};">
+<h3 style="color:${color}">${item.data.handle}</h3>
+<span>UID: ${item.id}</span>
+</div>
+<div class="god-card-body">
+<div class="god-media-box">${mediaHtml}</div>
+<div class="god-data-row"><span class="god-label">TYPE</span><span class="god-val" style="color:${color}">${item.type} VERIFICATION</span></div>
+<div class="god-data-row"><span class="god-label">EMAIL</span><span class="god-val">${item.data.email}</span></div>
+<div class="god-data-row"><span class="god-label">JOINED</span><span class="god-val">${joinDate}</span></div>
+<div class="god-data-row"><span class="god-label">STRIKES</span><span class="god-val">${item.data.rejection_count || 0} / 5</span></div>
+</div>
+<div class="god-actions">
+<button class="god-btn god-btn-reject" onclick="judgeGodUser(${index}, 'reject')">REJECT</button>
+<button class="god-btn god-btn-approve" onclick="judgeGodUser(${index}, 'approve')">APPROVE</button>
+</div>
+<div class="god-card-footer" style="color:${color};">
+QUEUE ITEM: ${index + 1} / ${total}
+</div>
+`;
+container.appendChild(card);
+});
+};
+
+// --- 3. CAROUSEL ENGINE ---
+window.updateGodCarousel = () => {
+const cards = document.querySelectorAll('.god-card');
+cards.forEach((card, i) => {
+let offset = i - window.rotatorIndex;
+if (i < window.rotatorIndex) {
+card.style.opacity = '0'; card.style.transform = 'translate(-50%, -50%) scale(0)'; card.style.zIndex = -1; return;
+}
+if (offset === 0) {
+card.style.transform = 'translate(-50%, -50%) translateZ(0px) scale(1)';
+card.style.opacity = '1'; card.style.zIndex = '10'; card.style.filter = 'none'; card.classList.add('active');
+} else if (offset === 1) {
+card.style.transform = 'translate(-50%, -50%) translateX(250px) translateZ(-200px) rotateY(-15deg) scale(0.8)';
+card.style.opacity = '0.5'; card.style.zIndex = '5'; card.style.filter = 'brightness(0.5)'; card.classList.remove('active');
+} else if (offset === 2) {
+card.style.transform = 'translate(-50%, -50%) translateX(450px) translateZ(-400px) rotateY(-30deg) scale(0.6)';
+card.style.opacity = '0.2'; card.style.zIndex = '1'; card.classList.remove('active');
+} else {
+card.style.transform = 'translate(-50%, -50%) translateX(1000px) scale(0)'; card.style.opacity = '0';
+}
+});
+};
+
+// --- 4. JUDGMENT LOGIC ---
+window.cyberConfirm = (title, msg, type) => {
+return new Promise((resolve) => {
+const modal = document.getElementById('cyber-confirm-overlay');
+const box = document.getElementById('cyber-confirm-box');
+const txtTitle = document.getElementById('cc-title');
+const txtMsg = document.getElementById('cc-msg');
+const btnYes = document.getElementById('cc-btn-yes');
+const btnNo = document.getElementById('cc-btn-no');
+
+box.classList.remove('confirm-green', 'confirm-red');
+if(type === 'approve') { box.classList.add('confirm-green'); btnYes.innerText = "AUTHORIZE"; }
+else { box.classList.add('confirm-red'); btnYes.innerText = "REJECT"; }
+
+txtTitle.innerText = title; txtMsg.innerText = msg; modal.style.display = 'flex';
+
+const handleYes = () => { cleanup(); resolve(true); };
+const handleNo = () => { cleanup(); resolve(false); };
+function cleanup() { modal.style.display = 'none'; btnYes.removeEventListener('click', handleYes); btnNo.removeEventListener('click', handleNo); }
+btnYes.addEventListener('click', handleYes); btnNo.addEventListener('click', handleNo);
+});
+};
+
+window.judgeGodUser = async (index, verdict) => {
+const item = window.pendingList[index];
+if(!item) return;
+
+const title = verdict === 'approve' ? "AUTHORIZE USER?" : "REJECT USER?";
+const msg = verdict === 'approve' ? `Grant ${item.type} status?` : `Reject application? Adds a strike.`;
+const confirmed = await window.cyberConfirm(title, msg, verdict);
+if(!confirmed) return;
+
+const cardEl = document.getElementById(`card-${index}`);
+if(verdict === 'approve') cardEl.classList.add('phase-approve');
+else cardEl.classList.add('phase-reject');
+
+window.rotatorIndex++;
+updateGodCarousel();
+
+const remaining = window.pendingList.length - window.rotatorIndex;
+if(remaining <= 0) setTimeout(() => document.getElementById('god-empty-msg').style.display = 'block', 600);
+
+try {
+if(item.type === 'ID') {
+if(verdict === 'approve') {
+await window.db.collection('users').doc(item.id).update({ verification_status: 'verified', verified: true });
+window.showToast(`${item.data.handle} APPROVED`, "success");
+} else {
+await window.db.collection('users').doc(item.id).update({
+verification_status: 'rejected', verified: false,
+rejection_count: firebase.firestore.FieldValue.increment(1)
+});
+window.showToast(`${item.data.handle} REJECTED`, "error");
+}
+}
+else if(item.type === 'ARTIST') {
+if(verdict === 'approve') {
+await window.db.collection('users').doc(item.id).update({ artist_status: 'verified' });
+window.showToast("Artist Approved", "success");
+} else {
+await window.db.collection('users').doc(item.id).update({ artist_status: 'rejected' });
+window.showToast("Artist Rejected", "error");
+}
+}
+} catch (e) {
+window.showToast("DB ERROR: " + e.message, "error");
+}
+};
+</script>
